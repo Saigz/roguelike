@@ -19,7 +19,7 @@ class creature {
 
 class player : creature {
   int xp; // очки опыта
-  
+
   
 
 };
@@ -49,9 +49,9 @@ int main() {
 
 
     initscr();
-    keypad(stdscr, 1); // allow arrows
-    noecho(); // dont dispay input
-    curs_set(0); // hide cursor
+    keypad(stdscr, 1);            // allow arrows
+    noecho();                     // dont dispay input
+    curs_set(0);                  // hide cursor
     getmaxyx(stdscr, rows, cols); // границы экрана
 
 
