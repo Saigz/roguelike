@@ -1,1 +1,6 @@
 # roguelike
+
+made by ...
+
+
+this ouur first game on c++ with ncurseslib...
