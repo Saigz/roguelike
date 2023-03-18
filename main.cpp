@@ -1,8 +1,28 @@
 #include <iostream>
 #include <ncurses.h>
+#include <string.h>
+
 // основнная тест комната
 char room[80][24];
 
+class creature {
+  public :
+  int hp;      // health
+  int mana;    // mana
+  int dmg;     // урон
+  int armor;   // броня
+  int x;       // x coord
+  int y;       // y coord
+  string name; // name
+
+};
+
+class player : creature {
+  int xp; // очки опыта
+  
+  
+
+};
 
 
 //создание комнаты
