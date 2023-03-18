@@ -1,28 +1,83 @@
 #include <iostream>
 #include <ncurses.h>
-#include <string.h>
+
+using namespace std;
 
 // основнная тест комната
-char room[80][24];
+char room[238][74];
 
-class creature {
+
+
+// Классы
+
+
+// класс для хранения координат обьектов
+class coord {
+  public :
+  int x;
+  int y;
+};
+
+
+class creature : public coord {
   public :
   int hp;      // health
   int mana;    // mana
   int dmg;     // урон
   int armor;   // броня
-  int x;       // x coord
-  int y;       // y coord
-  string name; // name
+
 
 };
 
-class player : creature {
-  int xp; // очки опыта
 
-  
 
+
+class player : public creature {
+  public :
+
+
+    // функция передвежния по карте игрока
+    player movement (player pl, int action); 
 };
+
+
+// Функции и методы 
+
+
+player player::movement(player pl, int action) {
+    switch (action) {
+
+      case KEY_UP :
+      if (room[pl.x][pl.y - 1] == ' ') {
+          pl.y--;
+        }
+        break;
+
+      case KEY_DOWN :
+        if (room[pl.x][pl.y + 1] == ' ') {
+          pl.y++;
+        }
+        break;
+        
+      case KEY_RIGHT :
+        if (room[pl.x + 1][pl.y] == ' ') {
+          pl.x++;
+        }
+        break;
+
+      case KEY_LEFT :
+        if (room[pl.x - 1][pl.y] == ' ') {
+          pl.x--;
+        }
+        break;  
+
+      default:
+        break;
+    }
+    mvaddch(pl.y, pl.x, '@');
+    return pl;
+};
+
 
 
 //создание комнаты
@@ -41,66 +96,44 @@ void create_room(int rows, int cols) {
   }
 }
 
-using namespace std;
+
+
+
 
 int main() {
-    int x = 7, y = 18, action, rows, cols;
-	getch();
+    int action, rows = 74, cols = 238; // переменная для хранения клавиши + границы экрана
+    player pl; // игрок
+
+    pl.x = 11; // начально положение  игрока
+    pl.y = 11; 
 
 
-    initscr();
+
+    initscr();                    // start curses
     keypad(stdscr, 1);            // allow arrows
     noecho();                     // dont dispay input
     curs_set(0);                  // hide cursor
-    getmaxyx(stdscr, rows, cols); // границы экрана
+
+    // getmaxyx(stdscr, rows, cols); // границы экрана
 
 
 
 
 
-
+  //передвижение по карте
   do {
-    // system("clear");
+
     create_room(rows, cols);
-    switch (action) {
-      case KEY_UP :
-      if (room[x][y - 1] == ' ')
-      {
-        y--;
-      }
-        break;
+    pl = pl.movement(pl, action);
 
-      case KEY_DOWN :
-      if (room[x][y + 1] == ' ')
-      {
-        y++;
-      }
-        break;
-        
-      case KEY_RIGHT :
-      if (room[x + 1][y] == ' ')
-      {
-        x++;
-      }
-      
-        break;
-
-      case KEY_LEFT :
-      if (room[x - 1][y] == ' ')
-      {
-        x--;
-      }
-      
-        break;  
-      
-      default:
-        break;
-    }
-    mvaddch(y, x, '@');
-      
   } while((action = getch()) != 27); // 27 - escape - leave from cycle
     
-    // getch();
-    endwin();
+
+
+
+
+
+
+    endwin(); // end curses
     return 0;
 };
