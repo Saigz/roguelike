@@ -54,25 +54,25 @@ class player : public creature {
 player player::movement(player pl, int action) {
     switch (action) {
 
-      case KEY_UP :
+      case KEY_LEFT :
       if (map[pl.x][pl.y - 1] == ' ') {
           pl.y--;
         }
         break;
 
-      case KEY_DOWN :
+      case KEY_RIGHT :
         if (map[pl.x][pl.y + 1] == ' ') {
           pl.y++;
         }
         break;
         
-      case KEY_RIGHT :
+      case KEY_DOWN :
         if (map[pl.x + 1][pl.y] == ' ') {
           pl.x++;
         }
         break;
 
-      case KEY_LEFT :
+      case KEY_UP :
         if (map[pl.x - 1][pl.y] == ' ') {
           pl.x--;
         }
@@ -81,7 +81,7 @@ player player::movement(player pl, int action) {
       default:
         break;
     }
-    mvaddch(pl.y, pl.x, '@');
+    mvaddch(pl.x, pl.y, '@');
     return pl;
 };
 
@@ -100,7 +100,7 @@ void create_room(int rows, int cols, room start) {
   for (int i = start.x; i < start.x + start.size_x; i++) {
     for (int j = start.y; j < start.y + start.size_y; j++) {
       map[i][j]  = ' ';
-      mvaddch(j, i, ' ');
+      mvaddch(i, j, ' ');
     }
   }
 };
