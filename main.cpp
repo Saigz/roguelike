@@ -1,10 +1,11 @@
 #include <iostream>
 #include <ncurses.h>
+#include <ctime>
 
 using namespace std;
 
 // основнная тест комната
-char room[238][74];
+char map[238][74];
 
 
 
@@ -30,6 +31,12 @@ class creature : public coord {
 };
 
 
+class room : public coord {
+  public :
+  int size_x;
+  int size_y;
+
+};
 
 
 class player : public creature {
@@ -48,25 +55,25 @@ player player::movement(player pl, int action) {
     switch (action) {
 
       case KEY_UP :
-      if (room[pl.x][pl.y - 1] == ' ') {
+      if (map[pl.x][pl.y - 1] == ' ') {
           pl.y--;
         }
         break;
 
       case KEY_DOWN :
-        if (room[pl.x][pl.y + 1] == ' ') {
+        if (map[pl.x][pl.y + 1] == ' ') {
           pl.y++;
         }
         break;
         
       case KEY_RIGHT :
-        if (room[pl.x + 1][pl.y] == ' ') {
+        if (map[pl.x + 1][pl.y] == ' ') {
           pl.x++;
         }
         break;
 
       case KEY_LEFT :
-        if (room[pl.x - 1][pl.y] == ' ') {
+        if (map[pl.x - 1][pl.y] == ' ') {
           pl.x--;
         }
         break;  
@@ -79,51 +86,59 @@ player player::movement(player pl, int action) {
 };
 
 
-
-//создание комнаты
-void create_room(int rows, int cols) {
+void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        room[i][j]  = '#';
-        mvaddch(i, j, '#');
-      }
+    for (int j = 0; j < cols; j++) {
+      map[i][j] = '#';
+      mvaddch(i, j, '#');
     }
-    for (int i = 5; i < 21; i++) {
-      for (int j = 11; j < 21; j++) {
-        room[i][j]  = ' ';
-        mvaddch(j, i, ' ');
-      }
   }
-}
+};
+
+// создание комнаты
+void create_room(int rows, int cols, room start) {
+  for (int i = start.x; i < start.x + start.size_x; i++) {
+    for (int j = start.y; j < start.y + start.size_y; j++) {
+      map[i][j]  = ' ';
+      mvaddch(j, i, ' ');
+    }
+  }
+};
 
 
 
 
 
 int main() {
-    int action, rows = 74, cols = 238; // переменная для хранения клавиши + границы экрана
-    player pl; // игрок
+  srand(time(NULL));
+  int action, rows = 74, cols = 238; // переменная для хранения нажатой клавиши + границы экрана
+  player pl; // игрок
+  room start;
 
-    pl.x = 11; // начально положение  игрока
-    pl.y = 11; 
-
-
-
-    initscr();                    // start curses
-    keypad(stdscr, 1);            // allow arrows
-    noecho();                     // dont dispay input
-    curs_set(0);                  // hide cursor
-
-    // getmaxyx(stdscr, rows, cols); // границы экрана
+  start.x = (rand() % (rows - 20)) + 10; // положение комнаты
+  start.y = (rand() % (cols - 20)) + 10;
+  start.size_x = (rand() % 14) + 6; // размер комнаты
+  start.size_y = (rand() % 14) + 6;
+  pl.x = start.x + 3; // начально положение  игрока
+  pl.y = start.y + 3; 
 
 
 
+  initscr();                    // start curses
+  keypad(stdscr, 1);            // allow arrows
+  noecho();                     // dont dispay input
+  curs_set(0);                  // hide cursor
+
+    // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
 
 
+
+
+  system("clear");
   //передвижение по карте
   do {
-
-    create_room(rows, cols);
+    fill_map(rows, cols);
+    create_room(rows, cols, start);
     pl = pl.movement(pl, action);
 
   } while((action = getch()) != 27); // 27 - escape - leave from cycle
