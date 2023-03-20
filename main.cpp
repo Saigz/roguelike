@@ -36,6 +36,9 @@ class room : public coord {
   int size_x;
   int size_y;
 
+  room calc_coord(int rows, int cols, room start);
+  void create_room(int rows, int cols, room start);
+  void draw_room(int rows, int cols, room start);
 };
 
 
@@ -49,6 +52,17 @@ class player : public creature {
 
 
 // Функции и методы 
+
+
+room room::calc_coord(int rows, int cols, room start) {
+  start.x = (rand() % (rows - 20)) + 6; // положение комнаты
+  start.y = (rand() % (cols - 20)) + 6;
+  start.size_x = (rand() % 14) + 6; // размер комнаты
+  start.size_y = (rand() % 14) + 6;
+  
+  return start;
+};
+
 
 
 player player::movement(player pl, int action) {
@@ -94,14 +108,6 @@ void fill_map(int rows, int cols) {
   }
 };
 
-// создание комнаты в массиве
-void create_room(int rows, int cols, room start) {
-  for (int i = start.x; i <= start.x + start.size_x; i++) {
-    for (int j = start.y; j <= start.y + start.size_y; j++) {
-      map[i][j]  = ' ';
-    }
-  }
-};
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
@@ -113,8 +119,18 @@ void draw_walls(int rows, int cols) {
 };
 
 
+// создание комнаты в массиве
+void room::create_room(int rows, int cols, room start) {
+  for (int i = start.x; i <= start.x + start.size_x; i++) {
+    for (int j = start.y; j <= start.y + start.size_y; j++) {
+      map[i][j]  = ' ';
+    }
+  }
+};
+
+
 // вывод комнат в консоль
-void draw_room(int rows, int cols, room start) {
+void room::draw_room(int rows, int cols, room start) {
   for (int i = start.x; i <= start.x + start.size_x; i++) {
     for (int j = start.y; j <= start.y + start.size_y; j++) {
       mvaddch(i, j, ' ');
@@ -130,14 +146,16 @@ int main() {
   int action; // переменная для хранения нажатой клавиши
   int rows = 74, cols = 238; //  границы экрана
   player pl; // игрок
-  room start; // тест комната
+  room start, lvl1, lvl2, lvl3, lvl4; // комнаты
 
 
   // random spawn
-  start.x = (rand() % (rows - 20)) + 10; // положение комнаты
-  start.y = (rand() % (cols - 20)) + 10;
-  start.size_x = (rand() % 14) + 6; // размер комнаты
-  start.size_y = (rand() % 14) + 6;
+  start = start.calc_coord(rows, cols, start);
+  lvl1 = lvl1.calc_coord(rows, cols, lvl1);
+  lvl2 = lvl2.calc_coord(rows, cols, lvl2);
+  lvl3 = lvl3.calc_coord(rows, cols, lvl3);
+  lvl4 = lvl4.calc_coord(rows, cols, lvl4);
+
   pl.x = start.x + 3; // начально положение  игрока
   pl.y = start.y + 3; 
 
@@ -148,16 +166,31 @@ int main() {
   noecho();                     // dont dispay input
   curs_set(0);                  // hide cursor
 
-    // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
+  // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
 
-    fill_map(rows, cols);
-    create_room(rows, cols, start);
+
+  // добавляем комнаты в массив
+  fill_map(rows, cols);
+  start.create_room(rows, cols, start);
+  lvl1.create_room(rows, cols, lvl1);
+  lvl2.create_room(rows, cols, lvl2);
+  lvl3.create_room(rows, cols, lvl3);
+  lvl4.create_room(rows, cols, lvl4);
+
 
   system("clear");
+
+
   //передвижение по карте
   do {
+    //отрисовываем карту
     draw_walls(rows, cols);
-    draw_room(rows, cols, start);
+    start.draw_room(rows, cols, start);
+    lvl1.draw_room(rows, cols, lvl1);
+    lvl2.draw_room(rows, cols, lvl2);
+    lvl3.draw_room(rows, cols, lvl3);
+    lvl4.draw_room(rows, cols, lvl4);
+
 
 
     pl = pl.movement(pl, action);
