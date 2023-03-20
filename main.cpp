@@ -55,7 +55,7 @@ player player::movement(player pl, int action) {
     switch (action) {
 
       case KEY_LEFT :
-      if (map[pl.x][pl.y - 1] == ' ') {
+      if (map[pl.x][pl.y - 1] == ' ') { // проверка чтобы не выйти на стену
           pl.y--;
         }
         break;
@@ -81,7 +81,7 @@ player player::movement(player pl, int action) {
       default:
         break;
     }
-    mvaddch(pl.x, pl.y, '@');
+    mvaddch(pl.x, pl.y, '@'); // печать игрока
     return pl;
 };
 
@@ -90,7 +90,7 @@ void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       map[i][j] = '#';
-      mvaddch(i, j, '#');
+      mvaddch(i, j, '#'); // печать символа  в определенных координатах
     }
   }
 };
@@ -111,10 +111,13 @@ void create_room(int rows, int cols, room start) {
 
 int main() {
   srand(time(NULL));
-  int action, rows = 74, cols = 238; // переменная для хранения нажатой клавиши + границы экрана
+  int action; // переменная для хранения нажатой клавиши
+  int rows = 74, cols = 238; //  границы экрана
   player pl; // игрок
-  room start;
+  room start; // тест комната
 
+
+  // random spawn
   start.x = (rand() % (rows - 20)) + 10; // положение комнаты
   start.y = (rand() % (cols - 20)) + 10;
   start.size_x = (rand() % 14) + 6; // размер комнаты
@@ -123,7 +126,7 @@ int main() {
   pl.y = start.y + 3; 
 
 
-
+  // curses console settings
   initscr();                    // start curses
   keypad(stdscr, 1);            // allow arrows
   noecho();                     // dont dispay input
