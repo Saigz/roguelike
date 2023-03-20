@@ -61,26 +61,26 @@ room room::calc_coord(int rows, int cols, room start) {
 
   while (collision == 1 ) {
 
-  start.x = (rand() % (rows - 20)) + 6; // положение комнаты
-  start.y = (rand() % (cols - 20)) + 6;
+    start.x = (rand() % (rows - 20)) + 6; // положение комнаты
+    start.y = (rand() % (cols - 20)) + 6;
   start.size_x = (rand() % 14) + 6; // размер комнаты
   start.size_y = (rand() % 14) + 6;
 
-  // антиналожение друг на друга комнат
-  for (int i = start.x; i <= start.x + start.size_x; i++) {
-    for (int j = start.y; j <= start.y + start.size_y; j++) {
+    // антиналожение друг на друга комнат
+    for (int i = start.x; i <= start.x + start.size_x; i++) {
+      for (int j = start.y; j <= start.y + start.size_y; j++) {
 
       if (map[start.x][start.y] == ' ' || map[start.x - 2][start.y] == ' ' 
       || map[start.x][start.y - 2] == ' ' || map[start.x + 2][start.y] == ' ' 
       || map[start.x][start.y + 2] == ' ') {
-        collision = 1;
-      } else {
-        collision = 0;
+          collision = 1;
+        } else {
+          collision = 0;
+        }
       }
-
     }
-  }
-  
+
+
 
   }
   
