@@ -81,30 +81,46 @@ player player::movement(player pl, int action) {
       default:
         break;
     }
-    mvaddch(pl.x, pl.y, '@'); // печать игрока
+    mvaddch(pl.x, pl.y, '@'); // печать игрока по определенным координатам
     return pl;
 };
 
-
+// заполнение  массива стенами
 void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       map[i][j] = '#';
-      mvaddch(i, j, '#'); // печать символа  в определенных координатах
     }
   }
 };
 
-// создание комнаты
+// создание комнаты в массиве
 void create_room(int rows, int cols, room start) {
-  for (int i = start.x; i < start.x + start.size_x; i++) {
-    for (int j = start.y; j < start.y + start.size_y; j++) {
+  for (int i = start.x; i <= start.x + start.size_x; i++) {
+    for (int j = start.y; j <= start.y + start.size_y; j++) {
       map[i][j]  = ' ';
+    }
+  }
+};
+
+// вывод стен в консоль
+void draw_walls(int rows, int cols) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      mvaddch(i, j, '#');
+    }
+  }
+};
+
+
+// вывод комнат в консоль
+void draw_room(int rows, int cols, room start) {
+  for (int i = start.x; i <= start.x + start.size_x; i++) {
+    for (int j = start.y; j <= start.y + start.size_y; j++) {
       mvaddch(i, j, ' ');
     }
   }
 };
-
 
 
 
@@ -134,14 +150,16 @@ int main() {
 
     // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
 
-
-
+    fill_map(rows, cols);
+    create_room(rows, cols, start);
 
   system("clear");
   //передвижение по карте
   do {
-    fill_map(rows, cols);
-    create_room(rows, cols, start);
+    draw_walls(rows, cols);
+    draw_room(rows, cols, start);
+
+
     pl = pl.movement(pl, action);
 
   } while((action = getch()) != 27); // 27 - escape - leave from cycle
