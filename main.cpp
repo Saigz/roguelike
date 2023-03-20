@@ -63,16 +63,17 @@ room room::calc_coord(int rows, int cols, room start) {
 
     start.x = (rand() % (rows - 20)) + 6; // положение комнаты
     start.y = (rand() % (cols - 20)) + 6;
-  start.size_x = (rand() % 14) + 6; // размер комнаты
-  start.size_y = (rand() % 14) + 6;
+    start.size_x = (rand() % 10) + 5; // размер комнаты
+    start.size_y = (rand() % 15) + 8;
+
 
     // антиналожение друг на друга комнат
     for (int i = start.x; i <= start.x + start.size_x; i++) {
       for (int j = start.y; j <= start.y + start.size_y; j++) {
 
-      if (map[start.x][start.y] == ' ' || map[start.x - 2][start.y] == ' ' 
-      || map[start.x][start.y - 2] == ' ' || map[start.x + 2][start.y] == ' ' 
-      || map[start.x][start.y + 2] == ' ') {
+        if (map[i][j] == ' ' || map[i - 2][j] == ' ' 
+        || map[i][j - 2] == ' ' || map[i + 2][j] == ' ' 
+        || map[i][j + 2] == ' ') {
           collision = 1;
         } else {
           collision = 0;
@@ -191,7 +192,7 @@ int main() {
   pl.y = start.y + 3; 
 
 
-  // curses console settings
+  // curses settings
   initscr();                    // start curses
   keypad(stdscr, 1);            // allow arrows
   noecho();                     // dont dispay input
@@ -213,6 +214,7 @@ int main() {
 
   //передвижение по карте
   do {
+
     //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols, start);
