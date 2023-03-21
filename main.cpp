@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ncurses.h>
 #include <ctime>
+#include <string>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ class creature : public coord {
   int mana;    // mana
   int dmg;     // урон
   int armor;   // броня
-
+  // bool is_alive = 1; // живой?
 
 };
 
@@ -167,6 +168,32 @@ void room::draw_room(int rows, int cols, room start) {
 };
 
 
+coord create_quest(room start) {
+  coord quest;
+    quest.x = (rand() % start.size_x) + start.x;
+    quest.y = (rand() % start.size_y) + start.y;
+  return quest;
+};
+
+void draw_quest(coord quest) {
+  mvaddch(quest.x, quest.y, '!');
+};
+
+coord start_quest(int rows, int cols) {
+  coord quest;
+  const char *mesg = "questt blablalalla ( press something to contunue)";
+    for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      mvaddch(i, j, ' ');
+    }
+  }
+  mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
+  getch();
+  quest.x = 0;
+  quest.y = 0;
+  return quest;
+};
+
 
 
 int main() {
@@ -175,6 +202,7 @@ int main() {
   int rows = 74, cols = 238; //  границы экрана
   player pl; // игрок
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
+  coord quest; // quest
 
 
   // добавляем стены в массив
@@ -208,13 +236,13 @@ int main() {
   lvl3.create_room(rows, cols, lvl3);
   lvl4.create_room(rows, cols, lvl4);
 
+  quest = create_quest(start); // рандомим координаты квеста
 
   system("clear");
 
 
   //передвижение по карте
   do {
-
     //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols, start);
@@ -222,11 +250,17 @@ int main() {
     lvl2.draw_room(rows, cols, lvl2);
     lvl3.draw_room(rows, cols, lvl3);
     lvl4.draw_room(rows, cols, lvl4);
+    draw_quest(quest);
+
 
 
 
     pl = pl.movement(pl, action);
 
+
+    if(pl.x == quest.x && pl.y == quest.y) {
+      quest = start_quest(rows, cols);
+    }
   } while((action = getch()) != 27); // 27 - escape - leave from cycle
     
 
