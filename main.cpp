@@ -98,25 +98,25 @@ player player::movement(player pl, int action) {
     switch (action) {
 
       case KEY_LEFT :
-      if (map[pl.x][pl.y - 1] == ' ') { // проверка чтобы не выйти на стену
+      if (map[pl.x][pl.y - 1] != '#') { // проверка чтобы не выйти на стену
           pl.y--;
         }
         break;
 
       case KEY_RIGHT :
-        if (map[pl.x][pl.y + 1] == ' ') {
+        if (map[pl.x][pl.y + 1] != '#') {
           pl.y++;
         }
         break;
         
       case KEY_DOWN :
-        if (map[pl.x + 1][pl.y] == ' ') {
+        if (map[pl.x + 1][pl.y] != '#') {
           pl.x++;
         }
         break;
 
       case KEY_UP :
-        if (map[pl.x - 1][pl.y] == ' ') {
+        if (map[pl.x - 1][pl.y] != '#') {
           pl.x--;
         }
         break;  
@@ -181,14 +181,14 @@ void draw_quest(coord quest) {
 
 coord start_quest(int rows, int cols) {
   coord quest;
-  const char *mesg = "questt blablalalla ( press something to contunue)";
+  const char *mesg = "questt blablalalla ( press something to contunue )";
     for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, ' ');
     }
   }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
-  getch();
+  // getch();
   quest.x = 0;
   quest.y = 0;
   return quest;
