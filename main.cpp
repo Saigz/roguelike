@@ -23,11 +23,12 @@ class coord {
 
 class creature : public coord {
   public :
-  int cur_hp;  // current health
-  int max_hp;  // max health
-  int mana;    // mana
-  int dmg;     // урон
-  int armor;   // броня
+  int cur_hp;   // current health
+  int max_hp;   // max health
+  int cur_mana; // current mana
+  int max_mana; // max mana
+  int dmg;      // урон
+  int armor;    // броня
   // bool is_alive = 1; // живой?
 
 };
@@ -50,6 +51,9 @@ class player : public creature {
 
     // функция передвежния по карте игрока
     player movement (player pl, int action); 
+
+    //функция вывода статов
+    void draw_stats (player pl, int rows, int cols);
 };
 
 
@@ -130,8 +134,7 @@ player player::movement(player pl, int action) {
 };
 
 void player::draw_stats(player pl, int rows, int cols) {
-  const char *mesg = "";
-  mvwprintw(stdscr, rows, (cols - strlen(mesg)) / 2, "%s", mesg);
+  mvwprintw(stdscr, rows - 1, (cols - 45) / 2, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", pl.cur_hp, pl.max_hp, pl.cur_mana, pl.max_mana, pl.armor, pl.dmg);
 }
 
 // заполнение  массива стенами
@@ -240,7 +243,18 @@ int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
   int rows = 74, cols = 238; //  границы экрана
+
+
   player pl; // игрок
+  pl.cur_hp = 100;
+  pl.max_hp = 100;
+  pl.armor = 2;
+  pl.dmg = 5;
+  pl.cur_mana = 100;
+  pl.max_mana = 100;
+
+
+
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   coord quest; // quest
 
@@ -299,6 +313,7 @@ int main() {
     lvl4.draw_room(rows, cols, lvl4);
     calc_coridors(lvl4, start);
     draw_quest(quest);
+    pl.draw_stats(pl, rows, cols);
 
 
 
