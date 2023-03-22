@@ -23,7 +23,8 @@ class coord {
 
 class creature : public coord {
   public :
-  int hp;      // health
+  int cur_hp;  // current health
+  int max_hp;  // max health
   int mana;    // mana
   int dmg;     // урон
   int armor;   // броня
@@ -62,22 +63,22 @@ room room::calc_coord(int rows, int cols, room start) {
 
   while (collision == 1 ) {
 
-    start.x = (rand() % (rows - 20)) + 6; // положение комнаты
-    start.y = (rand() % (cols - 20)) + 6;
+    start.x = (rand() % (rows - 30)) + 6; // положение комнаты
+    start.y = (rand() % (cols - 30)) + 6;
     start.size_x = (rand() % 10) + 5; // размер комнаты
     start.size_y = (rand() % 15) + 8;
 
-
+    collision = 0;
     // антиналожение друг на друга комнат
-    for (int i = start.x; i <= start.x + start.size_x; i++) {
-      for (int j = start.y; j <= start.y + start.size_y; j++) {
+    for (int i = start.x; i < start.x + start.size_x; i++) {
+      for (int j = start.y; j < start.y + start.size_y; j++) {
 
-        if (map[i][j] != '#' || map[i - 2][j] != '#' 
-        || map[i][j - 2] != '#' || map[i + 2][j] != '#' 
-        || map[i][j + 2] != '#') {
+        if (map[i][j] == ' ' || map[i - 1][j] == ' ' 
+        || map[i][j - 1] == ' ' || map[i + 1][j] == ' ' 
+        || map[i][j + 1] == ' ') {
           collision = 1;
-        } else {
-          collision = 0;
+          i = start.x + start.size_x;
+          j = start.y + start.size_y;
         }
       }
     }
@@ -128,6 +129,11 @@ player player::movement(player pl, int action) {
     return pl;
 };
 
+void player::draw_stats(player pl, int rows, int cols) {
+  const char *mesg = "";
+  mvwprintw(stdscr, rows, (cols - strlen(mesg)) / 2, "%s", mesg);
+}
+
 // заполнение  массива стенами
 void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
@@ -140,7 +146,7 @@ void fill_map(int rows, int cols) {
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
-  for (int i = 0; i < rows; i++) {
+  for (int i = 0; i < rows - 2; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, '#');
     }
@@ -243,12 +249,22 @@ int main() {
   fill_map(rows, cols);
 
 
-  // random spawn
+  // random spawn + добавляем комнаты в массив
   start = start.calc_coord(rows, cols, start);
+  start.create_room(rows, cols, start);
+
   lvl1 = lvl1.calc_coord(rows, cols, lvl1);
+  lvl1.create_room(rows, cols, lvl1);
+
   lvl2 = lvl2.calc_coord(rows, cols, lvl2);
+  lvl2.create_room(rows, cols, lvl2);
+
   lvl3 = lvl3.calc_coord(rows, cols, lvl3);
+  lvl3.create_room(rows, cols, lvl3);
+
   lvl4 = lvl4.calc_coord(rows, cols, lvl4);
+  lvl4.create_room(rows, cols, lvl4);
+
 
   pl.x = start.x + 3; // начально положение  игрока
   pl.y = start.y + 3; 
@@ -262,13 +278,6 @@ int main() {
 
   // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
 
-
-  // добавляем комнаты в массив
-  start.create_room(rows, cols, start);
-  lvl1.create_room(rows, cols, lvl1);
-  lvl2.create_room(rows, cols, lvl2);
-  lvl3.create_room(rows, cols, lvl3);
-  lvl4.create_room(rows, cols, lvl4);
 
   quest = create_quest(lvl1); // рандомим координаты квеста
 
@@ -284,11 +293,11 @@ int main() {
     lvl1.draw_room(rows, cols, lvl1);
     calc_coridors(lvl1, lvl2);
     lvl2.draw_room(rows, cols, lvl2);
-    // calc_coridors(lvl2, lvl3);
-    // lvl3.draw_room(rows, cols, lvl3);
-    // calc_coridors(lvl3, lvl4);
-    // lvl4.draw_room(rows, cols, lvl4);
-    // calc_coridors(lvl4, start);
+    calc_coridors(lvl2, lvl3);
+    lvl3.draw_room(rows, cols, lvl3);
+    calc_coridors(lvl3, lvl4);
+    lvl4.draw_room(rows, cols, lvl4);
+    calc_coridors(lvl4, start);
     draw_quest(quest);
 
 
