@@ -31,7 +31,7 @@ class creature : public coord {
   int max_mana; // max mana
   int dmg;      // урон
   int armor;    // броня
-  bool is_alive = true; // живой?
+  bool is_alive; // живой?
 
 };
 
@@ -65,7 +65,7 @@ class mob : public creature{
   int evil_rate; // В скольких случаях из ста бот будет агриться на человека
   int damage_rate; // В скольких случаях из ста бот будет наносить урон игроку
   float spawn_rate;// В последующем будет влиять на шанс выпадения
-  bool are_you_evil_now = false;
+  bool are_you_evil_now;
     
   mob spawn_mob (room start);
   void draw_mob(player pl, mob mob);
@@ -82,7 +82,7 @@ mob mob::move_bot(player pl, mob mob, int action){
   if(mob.is_alive){ // Функция активна только при условии того, что бот живой 
     if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1) && mob.is_alive){ // Поведение бота, если рядом игрок 
 
-      if(not mob.are_you_evil_now){ // Если сейчас не злой, то с определённым шансом будет злой 
+      if(!mob.are_you_evil_now){ // Если сейчас не злой, то с определённым шансом будет злой 
         int rand_evil_number = (rand() % 101);
 
         if(mob.evil_rate >= rand_evil_number){
@@ -93,7 +93,7 @@ mob mob::move_bot(player pl, mob mob, int action){
         int rand_damage_number = (rand() % 100);
 
         if(mob.damage_rate >= rand_damage_number){ // Если бот решил атаковать
-          pl.hp - mob.dmg;
+          pl.cur_hp = pl.cur_hp - mob.dmg;
         }
 
         //switch(action){ // Бот догоняет игрока
@@ -333,6 +333,39 @@ coord start_quest(int rows, int cols) {
   return quest;
 };
 
+void calc_coridors(room old, room neww) {
+  int neww_center_x, neww_center_y, old_center_x, old_center_y;
+  neww_center_x = neww.x + (neww.size_x / 2);
+  neww_center_y = neww.y + (neww.size_y / 2);
+  old_center_x = old.x + (old.size_x / 2);
+  old_center_y = old.y + (old.size_y / 2);
+
+  int y;
+  for (y = old_center_y; y != neww_center_y; ) {
+    map[old_center_x][y] = ' ';
+    mvaddch(old_center_x, y, ' ');
+
+    if (old_center_y < neww_center_y) {
+      y++;
+    } else {
+      y--;
+    }
+  }
+
+  for (int x = old_center_x; x != neww_center_x; ) {
+    map[x][y] = ' ';
+    mvaddch(x, y, ' ');
+    
+    
+    if (old_center_x < neww_center_x) {
+      x++;
+    } else {
+      x--;
+    }
+  }
+  
+  
+}
 
 
 int main() {
@@ -346,17 +379,16 @@ int main() {
   pl.dmg = 5;
   pl.cur_mana = 100;
   pl.max_mana = 100;
-
+  pl.is_alive = true;
 
 
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   coord quest; // quest
   mob test_mob; //тестовый моб
 
-  pl.hp = 100;
-  pl.dmg = 50;
-  test_mob.hp = 10;
+  test_mob.cur_hp = 10;
   test_mob.dmg = 50;
+  test_mob.are_you_evil_now = false;
 
 
   // добавляем стены в массив
@@ -404,7 +436,9 @@ int main() {
     //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols, start);
+    calc_coridors(start, lvl1);
     lvl1.draw_room(rows, cols, lvl1);
+    calc_coridors(lvl1, lvl2);
     lvl2.draw_room(rows, cols, lvl2);
     calc_coridors(lvl2, lvl3);
     lvl3.draw_room(rows, cols, lvl3);
@@ -427,9 +461,9 @@ int main() {
       quest = start_quest(rows, cols);
     }
     if(action == 32){ // если нажали клавишу атаки(пробел)
-      test_mob.hp - pl.dmg;
+      test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
 
-      if(test_mob.hp <= 0){ // если боту нанесли критический урон
+      if(test_mob.cur_hp <= 0){ // если боту нанесли критический урон
         test_mob.is_alive = false;
       }
     }
