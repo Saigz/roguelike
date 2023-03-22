@@ -72,9 +72,9 @@ room room::calc_coord(int rows, int cols, room start) {
     for (int i = start.x; i <= start.x + start.size_x; i++) {
       for (int j = start.y; j <= start.y + start.size_y; j++) {
 
-        if (map[i][j] == ' ' || map[i - 2][j] == ' ' 
-        || map[i][j - 2] == ' ' || map[i + 2][j] == ' ' 
-        || map[i][j + 2] == ' ') {
+        if (map[i][j] != '#' || map[i - 2][j] != '#' 
+        || map[i][j - 2] != '#' || map[i + 2][j] != '#' 
+        || map[i][j + 2] != '#') {
           collision = 1;
         } else {
           collision = 0;
@@ -182,11 +182,13 @@ void draw_quest(coord quest) {
 coord start_quest(int rows, int cols) {
   coord quest;
   const char *mesg = "questt blablalalla ( press something to contunue )";
-    for (int i = 0; i < rows; i++) {
+
+  for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, ' ');
     }
   }
+
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
   // getch();
   quest.x = 0;
@@ -194,7 +196,39 @@ coord start_quest(int rows, int cols) {
   return quest;
 };
 
+void calc_coridors(room old, room neww) {
+  int neww_center_x, neww_center_y, old_center_x, old_center_y;
+  neww_center_x = neww.x + (neww.size_x / 2);
+  neww_center_y = neww.y + (neww.size_y / 2);
+  old_center_x = old.x + (old.size_x / 2);
+  old_center_y = old.y + (old.size_y / 2);
 
+  int y;
+  for (y = old_center_y; y != neww_center_y; ) {
+    map[old_center_x][y] = ' ';
+    mvaddch(old_center_x, y, ' ');
+
+    if (old_center_y < neww_center_y) {
+      y++;
+    } else {
+      y--;
+    }
+  }
+
+  for (int x = old_center_x; x != neww_center_x; ) {
+    map[x][y] = ' ';
+    mvaddch(x, y, ' ');
+    
+    
+    if (old_center_x < neww_center_x) {
+      x++;
+    } else {
+      x--;
+    }
+  }
+  
+  
+}
 
 int main() {
   srand(time(NULL));
@@ -236,7 +270,7 @@ int main() {
   lvl3.create_room(rows, cols, lvl3);
   lvl4.create_room(rows, cols, lvl4);
 
-  quest = create_quest(start); // рандомим координаты квеста
+  quest = create_quest(lvl1); // рандомим координаты квеста
 
   system("clear");
 
@@ -246,10 +280,15 @@ int main() {
     //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols, start);
+    calc_coridors(start, lvl1);
     lvl1.draw_room(rows, cols, lvl1);
+    calc_coridors(lvl1, lvl2);
     lvl2.draw_room(rows, cols, lvl2);
-    lvl3.draw_room(rows, cols, lvl3);
-    lvl4.draw_room(rows, cols, lvl4);
+    // calc_coridors(lvl2, lvl3);
+    // lvl3.draw_room(rows, cols, lvl3);
+    // calc_coridors(lvl3, lvl4);
+    // lvl4.draw_room(rows, cols, lvl4);
+    // calc_coridors(lvl4, start);
     draw_quest(quest);
 
 
