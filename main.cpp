@@ -14,6 +14,11 @@ char map[238][74];
 
 // Классы
 
+class interface {
+  public :
+
+  
+};
 
 // класс для хранения координат обьектов
 class coord {
@@ -264,7 +269,7 @@ player player::movement(player pl, int action) {
 };
 
 void player::draw_stats(player pl, int rows, int cols) {
-  mvwprintw(stdscr, rows - 1, (cols - 45) / 2, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", pl.cur_hp, pl.max_hp, pl.cur_mana, pl.max_mana, pl.armor, pl.dmg);
+  mvwprintw(stdscr, rows - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", pl.cur_hp, pl.max_hp, pl.cur_mana, pl.max_mana, pl.armor, pl.dmg);
 }
 
 // заполнение  массива стенами
@@ -279,7 +284,7 @@ void fill_map(int rows, int cols) {
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
-  for (int i = 0; i < rows - 2; i++) {
+  for (int i = 0; i < rows - 1; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, '#');
     }
@@ -367,6 +372,25 @@ void calc_coridors(room old, room neww) {
   
 }
 
+void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, player pl, mob test_mob) {
+   //отрисовываем карту
+    draw_walls(rows, cols);
+    start.draw_room(rows, cols, start);
+    calc_coridors(start, lvl1);
+    lvl1.draw_room(rows, cols, lvl1);
+    calc_coridors(lvl1, lvl2);
+    lvl2.draw_room(rows, cols, lvl2);
+    calc_coridors(lvl2, lvl3);
+    lvl3.draw_room(rows, cols, lvl3);
+    calc_coridors(lvl3, lvl4);
+    lvl4.draw_room(rows, cols, lvl4);
+    calc_coridors(lvl4, start);
+    draw_quest(quest);
+    pl.draw_stats(pl, rows, cols);
+    test_mob.draw_mob(pl, test_mob); // рисуем моба
+};
+
+
 
 int main() {
   srand(time(NULL));
@@ -433,26 +457,11 @@ int main() {
 
   //передвижение по карте
   do {
-    //отрисовываем карту
-    draw_walls(rows, cols);
-    start.draw_room(rows, cols, start);
-    calc_coridors(start, lvl1);
-    lvl1.draw_room(rows, cols, lvl1);
-    calc_coridors(lvl1, lvl2);
-    lvl2.draw_room(rows, cols, lvl2);
-    calc_coridors(lvl2, lvl3);
-    lvl3.draw_room(rows, cols, lvl3);
-    calc_coridors(lvl3, lvl4);
-    lvl4.draw_room(rows, cols, lvl4);
-    calc_coridors(lvl4, start);
-    draw_quest(quest);
-    pl.draw_stats(pl, rows, cols);
-    test_mob.draw_mob(pl, test_mob); // рисуем моба
+    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, pl, test_mob);
+
+
+
     test_mob = test_mob.move_bot(pl, test_mob, action); // поведение бота 
-
-
-
-  
     pl = pl.movement(pl, action);
   
 
