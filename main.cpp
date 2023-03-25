@@ -14,12 +14,6 @@ char map[238][74];
 
 // Классы
 
-class interface {
-  public :
-
-  
-};
-
 // класс для хранения координат обьектов
 class coord {
   public :
@@ -66,7 +60,6 @@ class player : public creature {
 
     // функция передвежния по карте игрока
     void movement (int action); 
-
     //функция вывода статов
     void draw_stats (int rows, int cols);
 };
@@ -91,21 +84,21 @@ class mob : public creature {
 
 
 // Поведение бота (передвижение бота по карте, нанесение урона игроку и т.д.)
-mob mob::move_bot(player pl, mob mob, int action){
+mob mob::move_bot(player pl, mob mob, int action)  {
   if(mob.is_alive){ // Функция активна только при условии того, что бот живой 
-    if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1) && mob.is_alive){ // Поведение бота, если рядом игрок 
+    if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1)) { // Поведение бота, если рядом игрок 
 
-      if(!mob.are_you_evil_now){ // Если сейчас не злой, то с определённым шансом будет злой 
+      if(!mob.are_you_evil_now) { // Если сейчас не злой, то с определённым шансом будет злой 
         int rand_evil_number = (rand() % 101);
 
-        if(mob.evil_rate >= rand_evil_number){
+        if(mob.evil_rate >= rand_evil_number) {
           mob.are_you_evil_now = true;
         }
       }
-      if(mob.are_you_evil_now){ // Если бот злой, то он догоняет игрока и наносит ему урон с определённым шансом
+      if(mob.are_you_evil_now) { // Если бот злой, то он догоняет игрока и наносит ему урон с определённым шансом
         int rand_damage_number = (rand() % 100);
 
-        if(mob.damage_rate >= rand_damage_number){ // Если бот решил атаковать
+        if(mob.damage_rate >= rand_damage_number) { // Если бот решил атаковать
           pl.cur_hp = pl.cur_hp - mob.dmg;
         }
 
@@ -133,13 +126,10 @@ mob mob::move_bot(player pl, mob mob, int action){
       }
 
       return(mob);
-    }
-
-    else{ // Поведение бота, если игрока рядом нету
+    } else { // Поведение бота, если игрока рядом нету
       int rand_move_number = (rand() % 4);
 
-      switch(rand_move_number){
-
+      switch(rand_move_number) {
         case 0 :
           if (map[mob.x][mob.y - 1] == ' ') { // проверка чтобы не выйти за стену
             mob.y--;
@@ -180,14 +170,14 @@ mob mob::spawn_mob(room start) {
 
 // Нанесение бота на экран консоли
 void mob::draw_mob(player pl, mob mob) {
-  if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1) && mob.is_alive){
+  if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1) && mob.is_alive) {
     start_color();		
     init_pair(1, COLOR_RED, COLOR_BLACK);
     attron(COLOR_PAIR(1));
     mvaddch(mob.x, mob.y, 'a');
     attroff(COLOR_PAIR(1));
   }
-  else if(mob.is_alive){
+  else if(mob.is_alive) {
     mvaddch(mob.x, mob.y, 'a');
   }
   else{
@@ -201,7 +191,6 @@ void mob::draw_mob(player pl, mob mob) {
 
 void player::movement(int action) {
     switch (action) {
-
       case KEY_LEFT :
       if (map[x][y - 1] == ' ') { // проверка чтобы не выйти на стену
           y--;
@@ -266,7 +255,7 @@ void room::create_room(int rows, int cols) {
 void room::calc_coord(int rows, int cols) {
   int collision = 1;
 
-  while (collision == 1 ) {
+  while (collision == 1) {
 
     x = (rand() % (rows - 30)) + 6; // положение комнаты
     y = (rand() % (cols - 30)) + 6;
@@ -379,8 +368,6 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     pl.draw_stats(rows, cols);
     test_mob.draw_mob(pl, test_mob); // рисуем моба
 };
-
-
 
 int main() {
   srand(time(NULL));
