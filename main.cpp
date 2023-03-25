@@ -58,6 +58,7 @@ class room : public coord {
 
 class player : public creature {
   public :
+  int floor_counter; // счетчик этажа ( 5 - этажей победа)
   // default stats 
     player(int health, int armour, int damage, int mana) {
       cur_hp = health;
@@ -67,6 +68,7 @@ class player : public creature {
       cur_mana = mana;
       max_mana = mana;
       is_alive = true;
+      floor_counter = 1;
     };
 
     // функция передвежния по карте игрока
@@ -241,6 +243,7 @@ void player::movement(int action) {
 
 void player::draw_stats(int rows, int cols) {
   mvwprintw(stdscr, rows - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
+  mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
 
 void player::spawn_player(room start) {
@@ -259,7 +262,7 @@ void fill_map(int rows, int cols) {
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
-  for (int i = 0; i < rows - 1; i++) {
+  for (int i = 1; i < rows - 1; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, '#');
     }
@@ -405,7 +408,7 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
   lvl4->calc_room_coord(rows, cols);
 
   quest->calc_obj_coord(*lvl1); // рандомим координаты квеста
-  restart->calc_obj_coord(*lvl4); // рандомим координаты перехода на след этаж
+  restart->calc_obj_coord(*start); // рандомим координаты перехода на след этаж
   // test_mob -> test_mob.spawn_mob(*start); // рандомим координаты моба 
 
   pl->spawn_player(*start);
@@ -420,7 +423,6 @@ int main() {
   player pl(100, 5, 5, 100); // игрок
 
 
-
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
   obj restart;
@@ -432,24 +434,7 @@ int main() {
 
 
   init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
-  // добавляем стены в массив
-  // fill_map(rows, cols);
-
-
-  // random spawn + добавляем комнаты в массив
-  // start.calc_room_coord(rows, cols);
-  // lvl1.calc_room_coord(rows, cols);
-  // lvl2.calc_room_coord(rows, cols);
-  // lvl3.calc_room_coord(rows, cols);
-  // lvl4.calc_room_coord(rows, cols);
-
-  // quest.calc_obj_coord(lvl1); // рандомим координаты квеста
-  // restart.calc_obj_coord(lvl4); // рандомим координаты перехода на след этаж
-
   test_mob = test_mob.spawn_mob(start); // рандомим координаты моба 
-
-  // pl.x = start.x + 3; // начально положение  игрока
-  // pl.y = start.y + 3; 
 
   // curses settings
   initscr();                    // start curses
@@ -480,11 +465,12 @@ int main() {
         test_mob.is_alive = false;
       }
     }
-    // if(pl.x == restart.x && pl.y == restart.y) {
-    //   init_floor(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, test_mob, pl); // рандомим этаж
-    // }
+    if(pl.x == restart.x && pl.y == restart.y) {
+      init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
+      pl.floor_counter++; // рандомим этаж
+    }
    
-  } while((action = getch()) != 27); // 27 - escape - leave from cycle
+  } while((action = getch()) != 27 && pl.floor_counter != 5); // 27 - escape - leave from cycle
     
 
 
