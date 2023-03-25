@@ -19,6 +19,12 @@ class coord {
   public :
   int x;
   int y;
+
+  coord() {
+    x = 0;
+    y = 0;
+  }
+  // void calc_obj_coord(room start);
 };
 
 class creature : public coord {
@@ -39,9 +45,14 @@ class room : public coord {
   int size_x;
   int size_y;
 
-  void calc_coord(int rows, int cols);// рассчитывает координаты комнаты
-  void create_room(int rows, int cols);// добавляет и нформацию о комнате в массив
-  void draw_room(int rows, int cols);// рисует комнаты в консоле
+  room() {
+    size_x = 0;
+    size_y = 0;
+  }
+
+  void calc_room_coord(int rows, int cols); // рассчитывает координаты комнаты
+  void create_room(int rows, int cols);     // добавляет и нформацию о комнате в массив
+  void draw_room(int rows, int cols);       // рисует комнаты в консоле
 };
 
 
@@ -62,6 +73,8 @@ class player : public creature {
     void movement (int action); 
     //функция вывода статов
     void draw_stats (int rows, int cols);
+    // спавн игрока
+    void spawn_player (room start);
 };
 
 //класс для мобов
@@ -77,6 +90,11 @@ class mob : public creature {
   void draw_mob(player pl, mob mob);
   void active_mode(player pl, mob mob);
   mob move_bot(player pl, mob mob, int action);
+};
+
+class obj : public coord {
+  public :
+  void calc_obj_coord(room start);
 };
 
 
@@ -225,6 +243,11 @@ void player::draw_stats(int rows, int cols) {
   mvwprintw(stdscr, rows - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
 }
 
+void player::spawn_player(room start) {
+  x = start.x + 3;
+  y = start.y + 3;
+};
+
 // заполнение  массива стенами
 void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
@@ -252,7 +275,7 @@ void room::create_room(int rows, int cols) {
   }
 };
 
-void room::calc_coord(int rows, int cols) {
+void room::calc_room_coord(int rows, int cols) {
   int collision = 1;
 
   while (collision == 1) {
@@ -277,9 +300,8 @@ void room::calc_coord(int rows, int cols) {
       }
     }
   }
-  create_room(rows, cols);
+  create_room(rows, cols); // сразу закидываем в массив
 };
-
 
 // вывод комнат в консоль
 void room::draw_room(int rows, int cols) {
@@ -290,20 +312,21 @@ void room::draw_room(int rows, int cols) {
   }
 };
 
-
-coord create_quest(room start) {
-  coord quest;
-  quest.x = (rand() % start.size_x) + start.x;
-  quest.y = (rand() % start.size_y) + start.y;
-  return quest;
+void obj::calc_obj_coord(room start) {
+  x = (rand() % start.size_x) + start.x;
+  y = (rand() % start.size_y) + start.y;
 };
 
 void draw_quest(coord quest) {
   mvaddch(quest.x, quest.y, '!');
 };
 
-coord start_quest(int rows, int cols) {
-  coord quest;
+void draw_restart(coord restart) {
+  mvaddch(restart.x, restart.y, '0');
+};
+
+obj start_quest(int rows, int cols) {
+  obj quest;
   const char *mesg = "questt blablalalla ( press something to contunue)";
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -311,7 +334,6 @@ coord start_quest(int rows, int cols) {
         }
     }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
-  getch();
   quest.x = 0;
   quest.y = 0;
   return quest;
@@ -351,7 +373,7 @@ void calc_coridors(room old, room neww) {
   
 }
 
-void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, player pl, mob test_mob) {
+void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, player pl, mob test_mob) {
    //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols);
@@ -364,9 +386,31 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     calc_coridors(lvl3, lvl4);
     lvl4.draw_room(rows, cols);
     calc_coridors(lvl4, start);
-    draw_quest(quest);
-    pl.draw_stats(rows, cols);
+    draw_quest(quest); //   quest
+    draw_restart(restart);
+    pl.draw_stats(rows, cols); // статы
     test_mob.draw_mob(pl, test_mob); // рисуем моба
+};
+
+void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, mob *test_mob, player *pl) {
+  // добавляем стены в массив
+  fill_map(rows, cols);
+
+
+  // // random spawn + добавляем комнаты в массив
+  start->calc_room_coord(rows, cols);
+  lvl1->calc_room_coord(rows, cols);
+  lvl2->calc_room_coord(rows, cols);
+  lvl3->calc_room_coord(rows, cols);
+  lvl4->calc_room_coord(rows, cols);
+
+  quest->calc_obj_coord(*lvl1); // рандомим координаты квеста
+  restart->calc_obj_coord(*lvl4); // рандомим координаты перехода на след этаж
+  // test_mob -> test_mob.spawn_mob(*start); // рандомим координаты моба 
+
+  pl->spawn_player(*start);
+
+
 };
 
 int main() {
@@ -378,7 +422,8 @@ int main() {
 
 
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
-  coord quest; // quest
+  obj quest; // quest
+  obj restart;
   mob test_mob; //тестовый моб
 
   test_mob.cur_hp = 10;
@@ -386,21 +431,25 @@ int main() {
   test_mob.are_you_evil_now = false;
 
 
+  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
   // добавляем стены в массив
-  fill_map(rows, cols);
+  // fill_map(rows, cols);
 
 
   // random spawn + добавляем комнаты в массив
-  start.calc_coord(rows, cols);
-  lvl1.calc_coord(rows, cols);
-  lvl2.calc_coord(rows, cols);
-  lvl3.calc_coord(rows, cols);
-  lvl4.calc_coord(rows, cols);
+  // start.calc_room_coord(rows, cols);
+  // lvl1.calc_room_coord(rows, cols);
+  // lvl2.calc_room_coord(rows, cols);
+  // lvl3.calc_room_coord(rows, cols);
+  // lvl4.calc_room_coord(rows, cols);
 
+  // quest.calc_obj_coord(lvl1); // рандомим координаты квеста
+  // restart.calc_obj_coord(lvl4); // рандомим координаты перехода на след этаж
 
-  pl.x = start.x + 3; // начально положение  игрока
-  pl.y = start.y + 3; 
+  test_mob = test_mob.spawn_mob(start); // рандомим координаты моба 
 
+  // pl.x = start.x + 3; // начально положение  игрока
+  // pl.y = start.y + 3; 
 
   // curses settings
   initscr();                    // start curses
@@ -409,22 +458,15 @@ int main() {
   curs_set(0);                  // hide cursor
 
   // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
-
-
-  quest = create_quest(lvl1); // рандомим координаты квеста
-  test_mob = test_mob.spawn_mob(start); // рандомим координаты моба 
-
   system("clear");
 
 
-  //передвижение по карте
+  // игровой цикл
   do {
-    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, pl, test_mob);
-
-
+    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
 
     test_mob = test_mob.move_bot(pl, test_mob, action); // поведение бота 
-    pl.movement(action);
+    pl.movement(action); // передвижение по карте
   
 
 
@@ -438,6 +480,9 @@ int main() {
         test_mob.is_alive = false;
       }
     }
+    // if(pl.x == restart.x && pl.y == restart.y) {
+    //   init_floor(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, test_mob, pl); // рандомим этаж
+    // }
    
   } while((action = getch()) != 27); // 27 - escape - leave from cycle
     
