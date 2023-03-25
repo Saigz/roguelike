@@ -264,9 +264,7 @@ void room::create_room(int rows, int cols) {
 };
 
 void room::calc_coord(int rows, int cols) {
-
   int collision = 1;
-
 
   while (collision == 1 ) {
 
@@ -274,8 +272,8 @@ void room::calc_coord(int rows, int cols) {
     y = (rand() % (cols - 30)) + 6;
     size_x = (rand() % 10) + 5; // размер комнаты
     size_y = (rand() % 15) + 8;
-
     collision = 0;
+
     // антиналожение друг на друга комнат
     for (int i = x; i < x + size_x; i++) {
       for (int j = y; j < y + size_y; j++) {
@@ -306,8 +304,8 @@ void room::draw_room(int rows, int cols) {
 
 coord create_quest(room start) {
   coord quest;
-    quest.x = (rand() % start.size_x) + start.x;
-    quest.y = (rand() % start.size_y) + start.y;
+  quest.x = (rand() % start.size_x) + start.x;
+  quest.y = (rand() % start.size_y) + start.y;
   return quest;
 };
 
