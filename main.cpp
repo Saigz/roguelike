@@ -19,12 +19,6 @@ class coord {
   public :
   int x;
   int y;
-
-  coord() {
-    x = 0;
-    y = 0;
-  }
-  // void calc_obj_coord(room start);
 };
 
 class creature : public coord {
@@ -35,7 +29,7 @@ class creature : public coord {
   int max_mana; // max mana
   int dmg;      // урон
   int armor;    // броня
-  bool is_alive; // живой?
+  bool is_alive;// живой?
 
 };
 
@@ -45,20 +39,14 @@ class room : public coord {
   int size_x;
   int size_y;
 
-  room() {
-    size_x = 0;
-    size_y = 0;
-  }
-
-  void calc_room_coord(int rows, int cols); // рассчитывает координаты комнаты
-  void create_room(int rows, int cols);     // добавляет и нформацию о комнате в массив
-  void draw_room(int rows, int cols);       // рисует комнаты в консоле
+  void calc_coord(int rows, int cols);// рассчитывает координаты комнаты
+  void create_room(int rows, int cols);// добавляет и нформацию о комнате в массив
+  void draw_room(int rows, int cols);// рисует комнаты в консоле
 };
 
 
 class player : public creature {
   public :
-  int floor_counter; // счетчик этажа ( 5 - этажей победа)
   // default stats 
     player(int health, int armour, int damage, int mana) {
       cur_hp = health;
@@ -68,15 +56,12 @@ class player : public creature {
       cur_mana = mana;
       max_mana = mana;
       is_alive = true;
-      floor_counter = 1;
     };
 
     // функция передвежния по карте игрока
     void movement (int action); 
     //функция вывода статов
     void draw_stats (int rows, int cols);
-    // спавн игрока
-    void spawn_player (room start);
 };
 
 //класс для мобов
@@ -85,18 +70,24 @@ class mob : public creature {
   int attack_radius; // Радиус атаки бота
   int evil_rate; // В скольких случаях из ста бот будет агриться на человека
   int damage_rate; // В скольких случаях из ста бот будет наносить урон игроку
-  float spawn_rate;// В последующем будет влиять на шанс выпадения
+  int spawn_rate;// В последующем будет влиять на шанс выпадения
   bool are_you_evil_now;
     
-  mob spawn_mob (room start);
-  void draw_mob(player pl, mob mob);
-  void active_mode(player pl, mob mob);
-  mob move_bot(player pl, mob mob, int action);
-};
+  void spawn_mob (room start);
+  void draw_mob(player pl);
+  void behavior_bot(player* pl, int action);
 
-class obj : public coord {
-  public :
-  void calc_obj_coord(room start);
+  mob(int u_cur_hp, int u_dmg, int u_attack_radius, int u_evil_rate, int u_damage_rate, int u_spawn_rate){
+    cur_hp = u_cur_hp;
+    dmg = u_dmg;
+
+    attack_radius = u_attack_radius;
+    evil_rate = u_evil_rate;
+    damage_rate = u_damage_rate;
+    spawn_rate = u_spawn_rate;
+    are_you_evil_now = false;
+    is_alive = true;
+  }
 };
 
 
@@ -104,107 +95,100 @@ class obj : public coord {
 
 
 // Поведение бота (передвижение бота по карте, нанесение урона игроку и т.д.)
-mob mob::move_bot(player pl, mob mob, int action)  {
-  if(mob.is_alive){ // Функция активна только при условии того, что бот живой 
-    if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1)) { // Поведение бота, если рядом игрок 
+void mob::behavior_bot(player* pl, int action)  {
+  if(is_alive){ // Функция активна только при условии того, что бот живой 
+    if((abs(pl->x - x) <= 1) && (abs(pl->y - y) <= 1)) { // Поведение бота, если рядом игрок 
 
-      if(!mob.are_you_evil_now) { // Если сейчас не злой, то с определённым шансом будет злой 
+      if(!are_you_evil_now) { // Если сейчас не злой, то с определённым шансом будет злой 
         int rand_evil_number = (rand() % 101);
 
-        if(mob.evil_rate >= rand_evil_number) {
-          mob.are_you_evil_now = true;
+        if(evil_rate >= rand_evil_number) {
+          are_you_evil_now = true;
         }
       }
-      if(mob.are_you_evil_now) { // Если бот злой, то он догоняет игрока и наносит ему урон с определённым шансом
+      if(are_you_evil_now) { // Если бот злой, то он догоняет игрока и наносит ему урон с определённым шансом
         int rand_damage_number = (rand() % 100);
 
-        if(mob.damage_rate >= rand_damage_number) { // Если бот решил атаковать
-          pl.cur_hp = pl.cur_hp - mob.dmg;
+        if(damage_rate >= rand_damage_number) { // Если бот решил атаковать
+          pl->cur_hp = pl->cur_hp - dmg;
+          if(pl->cur_hp <= 0){
+            pl->is_alive = false;
+          }
         }
 
-        //switch(action){ // Бот догоняет игрока
+        // Тут может быть функция догонялок
 
-          //case KEY_LEFT :
-            //mob.y--;
-            //break;
-
-          //case KEY_RIGHT :
-            //mob.y++;
-            //break;
-            
-          //case KEY_DOWN :
-            //mob.x++;
-            //break;
-
-          //case KEY_UP :
-            //mob.x--;
-            //break;  
-
-          //default:
-            //break;
-        //}        
       }
 
-      return(mob);
     } else { // Поведение бота, если игрока рядом нету
       int rand_move_number = (rand() % 4);
 
       switch(rand_move_number) {
         case 0 :
-          if (map[mob.x][mob.y - 1] == ' ') { // проверка чтобы не выйти за стену
-            mob.y--;
+          if (map[x][y - 1] == ' ') { // проверка чтобы не выйти за стену
+            y--;
+
+            map[x][y] = 'a';
+            map[x][y + 1] = ' ';
           }
           break;
 
         case 1 :
-          if (map[mob.x][mob.y + 1] == ' ') {
-            mob.y++;
+          if (map[x][y + 1] == ' ') {
+            y++;
+
+            map[x][y] = 'a';
+            map[x][y - 1] = ' ';
           }
           break;
 
         case 2 :
-          if (map[mob.x + 1][mob.y] == ' ') {
-            mob.x++;
+          if (map[x + 1][y] == ' ') {
+            x++;
+
+            map[x][y] = 'a';
+            map[x - 1][y] = ' ';
           }
           break;
 
         case 3 :
-          if (map[mob.x - 1][mob.y] == ' ') {
-            mob.x--;
+          if (map[x - 1][y] == ' ') {
+            x--;
+
+            map[x][y] = 'a';
+            map[x + 1][y] = ' ';
           }
           break;
       }
-      return(mob);
     }
   }
-  return(mob);
 };
 
 // Просчёт координат бота
-mob mob::spawn_mob(room start) {
-  mob mob;
-  mob.x = (rand() % start.size_x) + start.x;
-  mob.y = (rand() % start.size_y) + start.y;
-  return mob;
+void mob::spawn_mob(room start) {
+  x = (rand() % start.size_x) + start.x;
+  y = (rand() % start.size_y) + start.y;
+
+  map[x][y] = 'a';
 };
 
 // Нанесение бота на экран консоли
-void mob::draw_mob(player pl, mob mob) {
-  if((abs(pl.x - mob.x) <= 1) && (abs(pl.y - mob.y) <= 1) && mob.is_alive) {
+void mob::draw_mob(player pl) {
+  if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1) && is_alive) {
     start_color();		
     init_pair(1, COLOR_RED, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    mvaddch(mob.x, mob.y, 'a');
+    mvaddch(x, y, 'a');
     attroff(COLOR_PAIR(1));
   }
-  else if(mob.is_alive) {
-    mvaddch(mob.x, mob.y, 'a');
+  else if(is_alive) {
+    mvaddch(x, y, 'a');
   }
   else{
     start_color();		
     init_pair(1, COLOR_YELLOW, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    mvaddch(mob.x, mob.y, '%');
+    mvaddch(x, y, '%');
     attroff(COLOR_PAIR(1));
   }
 };
@@ -243,13 +227,7 @@ void player::movement(int action) {
 
 void player::draw_stats(int rows, int cols) {
   mvwprintw(stdscr, rows - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
-  mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
-
-void player::spawn_player(room start) {
-  x = start.x + 3;
-  y = start.y + 3;
-};
 
 // заполнение  массива стенами
 void fill_map(int rows, int cols) {
@@ -262,7 +240,7 @@ void fill_map(int rows, int cols) {
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
-  for (int i = 1; i < rows - 1; i++) {
+  for (int i = 0; i < rows - 1; i++) {
     for (int j = 0; j < cols; j++) {
       mvaddch(i, j, '#');
     }
@@ -278,7 +256,7 @@ void room::create_room(int rows, int cols) {
   }
 };
 
-void room::calc_room_coord(int rows, int cols) {
+void room::calc_coord(int rows, int cols) {
   int collision = 1;
 
   while (collision == 1) {
@@ -303,8 +281,9 @@ void room::calc_room_coord(int rows, int cols) {
       }
     }
   }
-  create_room(rows, cols); // сразу закидываем в массив
+  create_room(rows, cols);
 };
+
 
 // вывод комнат в консоль
 void room::draw_room(int rows, int cols) {
@@ -315,21 +294,20 @@ void room::draw_room(int rows, int cols) {
   }
 };
 
-void obj::calc_obj_coord(room start) {
-  x = (rand() % start.size_x) + start.x;
-  y = (rand() % start.size_y) + start.y;
+
+coord create_quest(room start) {
+  coord quest;
+  quest.x = (rand() % start.size_x) + start.x;
+  quest.y = (rand() % start.size_y) + start.y;
+  return quest;
 };
 
 void draw_quest(coord quest) {
   mvaddch(quest.x, quest.y, '!');
 };
 
-void draw_restart(coord restart) {
-  mvaddch(restart.x, restart.y, '0');
-};
-
-obj start_quest(int rows, int cols) {
-  obj quest;
+coord start_quest(int rows, int cols) {
+  coord quest;
   const char *mesg = "questt blablalalla ( press something to contunue)";
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -337,6 +315,7 @@ obj start_quest(int rows, int cols) {
         }
     }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
+  getch();
   quest.x = 0;
   quest.y = 0;
   return quest;
@@ -376,7 +355,7 @@ void calc_coridors(room old, room neww) {
   
 }
 
-void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, player pl, mob test_mob) {
+void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, player pl, mob test_mob) {
    //отрисовываем карту
     draw_walls(rows, cols);
     start.draw_room(rows, cols);
@@ -389,52 +368,41 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     calc_coridors(lvl3, lvl4);
     lvl4.draw_room(rows, cols);
     calc_coridors(lvl4, start);
-    draw_quest(quest); //   quest
-    draw_restart(restart);
-    pl.draw_stats(rows, cols); // статы
-    test_mob.draw_mob(pl, test_mob); // рисуем моба
-};
-
-void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, mob *test_mob, player *pl) {
-  // добавляем стены в массив
-  fill_map(rows, cols);
-
-
-  // // random spawn + добавляем комнаты в массив
-  start->calc_room_coord(rows, cols);
-  lvl1->calc_room_coord(rows, cols);
-  lvl2->calc_room_coord(rows, cols);
-  lvl3->calc_room_coord(rows, cols);
-  lvl4->calc_room_coord(rows, cols);
-
-  quest->calc_obj_coord(*lvl1); // рандомим координаты квеста
-  restart->calc_obj_coord(*start); // рандомим координаты перехода на след этаж
-  // test_mob -> test_mob.spawn_mob(*start); // рандомим координаты моба 
-
-  pl->spawn_player(*start);
-
-
+    draw_quest(quest);
+    pl.draw_stats(rows, cols);
+    test_mob.draw_mob(pl); // Рисуем моба
+    mvaddch(pl.x, pl.y, '@'); // Необходимо для корректной покраски мобов
 };
 
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
-  int rows = 74, cols = 238; //  границы экрана
-  player pl(100, 5, 5, 100); // игрок
+  int rows = 50, cols = 140; //  границы экрана
+  player pl(100, 5, 100, 100); // игрок
+
 
 
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
-  obj quest; // quest
-  obj restart;
-  mob test_mob; //тестовый моб
-
-  test_mob.cur_hp = 10;
-  test_mob.dmg = 50;
-  test_mob.are_you_evil_now = false;
+  coord quest; // quest
+  mob test_mob(10, 50, 1, 99, 99, 99); //тестовый моб
 
 
-  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
-  test_mob = test_mob.spawn_mob(start); // рандомим координаты моба 
+
+  // добавляем стены в массив
+  fill_map(rows, cols);
+
+
+  // random spawn + добавляем комнаты в массив
+  start.calc_coord(rows, cols);
+  lvl1.calc_coord(rows, cols);
+  lvl2.calc_coord(rows, cols);
+  lvl3.calc_coord(rows, cols);
+  lvl4.calc_coord(rows, cols);
+
+
+  pl.x = start.x + 3; // начально положение  игрока
+  pl.y = start.y + 3; 
+
 
   // curses settings
   initscr();                    // start curses
@@ -443,15 +411,24 @@ int main() {
   curs_set(0);                  // hide cursor
 
   // getmaxyx(stdscr, rows, cols); // границы экрана(консоли)
+
+
+  quest = create_quest(lvl1); // рандомим координаты квеста
+  test_mob.spawn_mob(start); // рандомим координаты моба 
+
   system("clear");
 
 
-  // игровой цикл
+  //передвижение по карте
   do {
-    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, pl, test_mob);
 
-    test_mob = test_mob.move_bot(pl, test_mob, action); // поведение бота 
-    pl.movement(action); // передвижение по карте
+
+ 
+    pl.movement(action);
+
+    test_mob.behavior_bot(&pl, action); // поведение бота
+    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, pl, test_mob);
   
 
 
@@ -463,14 +440,11 @@ int main() {
 
       if(test_mob.cur_hp <= 0){ // если боту нанесли критический урон
         test_mob.is_alive = false;
+        test_mob.draw_mob(pl);
       }
     }
-    if(pl.x == restart.x && pl.y == restart.y) {
-      init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
-      pl.floor_counter++; // рандомим этаж
-    }
    
-  } while((action = getch()) != 27 && pl.floor_counter != 5); // 27 - escape - leave from cycle
+  } while((action = getch()) != 27 && pl.is_alive); // 27 - escape - leave from cycle and while player is alive
     
 
 
