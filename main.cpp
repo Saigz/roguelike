@@ -8,8 +8,8 @@
 using namespace std;
 
 // основнная тест комната
-char map[238][74];
-
+char map[74][74];
+int map_vision[74][74];
 
 
 // Классы
@@ -210,25 +210,45 @@ void mob::draw_mob(player pl) {
 void player::movement(int action) {
     switch (action) {
       case KEY_LEFT :
-      if (map[x][y - 1] == ' ') { // проверка чтобы не выйти на стену
+        if (map[x][y - 1] == ' ') { // проверка чтобы не выйти на стену
           y--;
+          for (int i = x - 2; i < x + 2; i++) {
+            for (int j = y - 2; j < y + 3; j++) {
+              map_vision[i][j] = 1;
+            }
+          }
         }
         break;
 
       case KEY_RIGHT :
         if (map[x][y + 1] == ' ') {
           y++;
+          for (int i = x - 2; i < x + 2; i++) {
+            for (int j = y - 2; j < y + 3; j++) {
+              map_vision[i][j] = 1;
+            }
+          }
         }
         break;
         
       case KEY_DOWN :
         if (map[x + 1][y] == ' ') {
           x++;
+          for (int i = x - 2; i < x + 3; i++) {
+            for (int j = y - 2; j < y + 2; j++) {
+              map_vision[i][j] = 1;
+            }
+          }
         }
         break;
 
       case KEY_UP :
         if (map[x - 1][y] == ' ') {
+          for (int i = x - 3; i < x + 2; i++) {
+            for (int j = y - 2; j < y + 3; j++) {
+              map_vision[i][j] = 1;
+            }
+          }
           x--;
         }
         break;  
@@ -244,9 +264,36 @@ void player::draw_stats(int rows, int cols) {
   mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
 
+void init_map_vision(int rows, int cols) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      map_vision[i][j] = 0;
+    }
+  }
+};
+
 void player::spawn_player(room start) {
   x = start.x + 3;
   y = start.y + 3;
+
+// spawn vision
+  int k = 0, m = 0;
+  if (x > 3) {
+    k = x - 3;
+  } else {
+    k = 0;
+  }
+  if  (y > 3) {
+    m = y - 5;
+  } else {
+    m = 0;
+  }
+  for (int i = k; i < k + 7; i++) {
+    for (int j = m; j < m + 13; j++) {
+      map_vision[i][j] = 1;
+    }
+  }
+  
 };
 
 // заполнение  массива стенами
@@ -258,11 +305,17 @@ void fill_map(int rows, int cols) {
   }
 };
 
+
+
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
   for (int i = 1; i < rows - 1; i++) {
     for (int j = 0; j < cols; j++) {
-      mvaddch(i, j, '#');
+      if (map_vision[i][j] == 1) {
+        mvaddch(i, j, '#');
+      } else {
+        mvaddch(i, j, '.');
+      }
     }
   }
 };
@@ -309,7 +362,11 @@ void room::calc_room_coord(int rows, int cols) {
 void room::draw_room(int rows, int cols) {
   for (int i = x; i <= x + size_x; i++) {
     for (int j = y; j <= y + size_y; j++) {
+      if (map_vision[i][j] == 1) {
       mvaddch(i, j, ' ');
+      } else {
+      mvaddch(i, j, '.');
+      }
     }
   }
 };
@@ -330,11 +387,11 @@ void draw_restart(coord restart) {
 obj start_quest(int rows, int cols) {
   obj quest;
   const char *mesg = "questt blablalalla ( press something to contunue)";
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            mvaddch(i, j, ' ');
-        }
-    }
+  for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        mvaddch(i, j, ' ');
+      }
+  }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
   getch();
   quest.x = 0;
@@ -351,8 +408,14 @@ void calc_coridors(room old, room neww) {
 
   int y;
   for (y = old_center_y; y != neww_center_y; ) {
+
     map[old_center_x][y] = ' ';
+
+    if (map_vision[old_center_x][y] == 1) {
     mvaddch(old_center_x, y, ' ');
+    } else {
+      mvaddch(old_center_x, y, '.');
+    }
 
     if (old_center_y < neww_center_y) {
       y++;
@@ -363,7 +426,12 @@ void calc_coridors(room old, room neww) {
 
   for (int x = old_center_x; x != neww_center_x; ) {
     map[x][y] = ' ';
-    mvaddch(x, y, ' ');
+
+    if (map_vision[x][y] == 1) {
+      mvaddch(x, y, ' ');
+    } else {
+      mvaddch(x, y, '.');
+    }
     
     
     if (old_center_x < neww_center_x) {
@@ -400,7 +468,7 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
 void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, mob *test_mob, player *pl) {
   // добавляем стены в массив
   fill_map(rows, cols);
-
+  init_map_vision(rows, cols);
 
   // // random spawn + добавляем комнаты в массив
   start->calc_room_coord(rows, cols);
@@ -421,7 +489,7 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
-  int rows = 74, cols = 238; //  границы экрана
+  int rows = 74, cols = 74; //  границы экрана
   player pl(100, 5, 100, 100); // игрок
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
