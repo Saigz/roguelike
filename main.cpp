@@ -184,28 +184,29 @@ void mob::behavior_bot(player* pl, int action)  {
 void mob::spawn_mob(room start) {
   x = (rand() % start.size_x) + start.x;
   y = (rand() % start.size_y) + start.y;
-  this->is_alive = false; //////
+  this->is_alive = true; //////
   map[x][y] = 'a';
 };
 
 // Нанесение бота на экран консоли
 void mob::draw_mob(player pl) {
-  if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1) && is_alive) {
-    start_color();		
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    attron(COLOR_PAIR(1));
-    mvaddch(y, x, 'a');
-    attroff(COLOR_PAIR(1));
-  }
-  else if(is_alive) {
-    mvaddch(y, x, 'a');
-  }
-  else{
-    start_color();		
-    init_pair(1, COLOR_YELLOW, COLOR_BLACK);
-    attron(COLOR_PAIR(1));
-    mvaddch(y, x, '%');
-    attroff(COLOR_PAIR(1));
+  if (is_alive && map_vision[x][y] == 1) {
+    if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1)) {
+      init_pair(1, COLOR_RED, COLOR_BLACK);
+      attron(COLOR_PAIR(1));
+      mvaddch(y, x, 'a');
+      attroff(COLOR_PAIR(1));
+      attrset(0);
+    }
+    else {
+      mvaddch(y, x, 'a');
+    }
+  } else if (map_vision[x][y] == 1) {
+      init_pair(1, COLOR_YELLOW, COLOR_BLACK);
+      attron(COLOR_PAIR(1));
+      mvaddch(y, x, '%');
+      attroff(COLOR_PAIR(1));
+      attrset(0);
   }
 };
 
@@ -217,7 +218,7 @@ void player::movement(int action) {
         if (map[x][y - 1] == ' ') { 
           y--;
           // вижн
-          for (int i = x - 3; i < x + 3; i++) {
+          for (int i = x - 2; i < x + 3; i++) {
             for (int j = y - 3; j < y + 2; j++) {
               map_vision[i][j] = 1;
             }
@@ -377,12 +378,16 @@ void obj::calc_obj_coord(room start) {
 
 // вывод значка квеста в консоль
 void draw_quest(coord quest) {
-  mvaddch(quest.y, quest.x, '!');
+  if (map_vision[quest.x][quest.y] == 1) {
+    mvaddch(quest.y, quest.x, '!');
+  }
 };
 
 // вывод значка перехода на след этаж в консоль
 void draw_restart(coord restart) {
-  mvaddch(restart.y, restart.x, '0');
+  if (map_vision[restart.x][restart.y] == 1) {
+    mvaddch(restart.y, restart.x, '0');
+  }
 };
 
 // старт текстового квеста
@@ -508,6 +513,7 @@ int main() {
 
   // curses settings
   initscr();                    // start curses
+  start_color();		            // colors
   keypad(stdscr, 1);            // allow arrows
   noecho();                     // dont dispay input
   curs_set(0);                  // hide cursor
