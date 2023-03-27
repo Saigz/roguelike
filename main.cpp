@@ -8,8 +8,8 @@
 using namespace std;
 
 // основнная тест комната
-char map[74][74];
-int map_vision[74][74];
+char map[238][74];
+int map_vision[238][74];
 
 
 // Классы
@@ -182,7 +182,7 @@ void mob::behavior_bot(player* pl, int action)  {
 void mob::spawn_mob(room start) {
   x = (rand() % start.size_x) + start.x;
   y = (rand() % start.size_y) + start.y;
-  this->is_alive = true;
+  this->is_alive = false; //////
   map[x][y] = 'a';
 };
 
@@ -192,35 +192,35 @@ void mob::draw_mob(player pl) {
     start_color();		
     init_pair(1, COLOR_RED, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    mvaddch(x, y, 'a');
+    mvaddch(y, x, 'a');
     attroff(COLOR_PAIR(1));
   }
   else if(is_alive) {
-    mvaddch(x, y, 'a');
+    mvaddch(y, x, 'a');
   }
   else{
     start_color();		
     init_pair(1, COLOR_YELLOW, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    mvaddch(x, y, '%');
+    mvaddch(y, x, '%');
     attroff(COLOR_PAIR(1));
   }
 };
 
 void player::movement(int action) {
     switch (action) {
-      case KEY_LEFT :
+      case KEY_UP :
         if (map[x][y - 1] == ' ') { // проверка чтобы не выйти на стену
           y--;
           for (int i = x - 2; i < x + 2; i++) {
-            for (int j = y - 2; j < y + 3; j++) {
+            for (int j = y - 3; j < y + 2; j++) {
               map_vision[i][j] = 1;
             }
           }
         }
         break;
 
-      case KEY_RIGHT :
+      case KEY_DOWN :
         if (map[x][y + 1] == ' ') {
           y++;
           for (int i = x - 2; i < x + 2; i++) {
@@ -231,7 +231,7 @@ void player::movement(int action) {
         }
         break;
         
-      case KEY_DOWN :
+      case KEY_RIGHT :
         if (map[x + 1][y] == ' ') {
           x++;
           for (int i = x - 2; i < x + 3; i++) {
@@ -242,10 +242,10 @@ void player::movement(int action) {
         }
         break;
 
-      case KEY_UP :
+      case KEY_LEFT :
         if (map[x - 1][y] == ' ') {
           for (int i = x - 3; i < x + 2; i++) {
-            for (int j = y - 2; j < y + 3; j++) {
+            for (int j = y - 2; j < y + 2; j++) {
               map_vision[i][j] = 1;
             }
           }
@@ -256,11 +256,11 @@ void player::movement(int action) {
       default:
         break;
     }
-    mvaddch(x, y, '@'); // печать игрока по определенным координатам
+    mvaddch(y, x, '@'); // печать игрока по определенным координатам
 };
 
 void player::draw_stats(int rows, int cols) {
-  mvwprintw(stdscr, rows - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
+  mvwprintw(stdscr, cols - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
   mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
 
@@ -279,17 +279,17 @@ void player::spawn_player(room start) {
 // spawn vision
   int k = 0, m = 0;
   if (x > 3) {
-    k = x - 3;
+    k = x - 2;
   } else {
     k = 0;
   }
   if  (y > 3) {
-    m = y - 5;
+    m = y - 2;
   } else {
     m = 0;
   }
-  for (int i = k; i < k + 7; i++) {
-    for (int j = m; j < m + 13; j++) {
+  for (int i = k; i < k + 5; i++) {
+    for (int j = m; j < m + 5; j++) {
       map_vision[i][j] = 1;
     }
   }
@@ -309,12 +309,12 @@ void fill_map(int rows, int cols) {
 
 // вывод стен в консоль
 void draw_walls(int rows, int cols) {
-  for (int i = 1; i < rows - 1; i++) {
-    for (int j = 0; j < cols; j++) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 1; j < cols - 1; j++) {
       if (map_vision[i][j] == 1) {
-        mvaddch(i, j, '#');
+        mvaddch(j, i, '#');
       } else {
-        mvaddch(i, j, '.');
+        mvaddch(j, i, '.');
       }
     }
   }
@@ -336,8 +336,8 @@ void room::calc_room_coord(int rows, int cols) {
 
     x = (rand() % (rows - 30)) + 6; // положение комнаты
     y = (rand() % (cols - 30)) + 6;
-    size_x = (rand() % 10) + 5; // размер комнаты
-    size_y = (rand() % 15) + 8;
+    size_x = (rand() % 15) + 8; // размер комнаты
+    size_y = (rand() % 10) + 5;
     collision = 0;
 
     // антиналожение друг на друга комнат
@@ -363,9 +363,9 @@ void room::draw_room(int rows, int cols) {
   for (int i = x; i <= x + size_x; i++) {
     for (int j = y; j <= y + size_y; j++) {
       if (map_vision[i][j] == 1) {
-      mvaddch(i, j, ' ');
+      mvaddch(j, i, ' ');
       } else {
-      mvaddch(i, j, '.');
+      mvaddch(j, i, '.');
       }
     }
   }
@@ -377,11 +377,11 @@ void obj::calc_obj_coord(room start) {
 };
 
 void draw_quest(coord quest) {
-  mvaddch(quest.x, quest.y, '!');
+  mvaddch(quest.y, quest.x, '!');
 };
 
 void draw_restart(coord restart) {
-  mvaddch(restart.x, restart.y, '0');
+  mvaddch(restart.y, restart.x, '0');
 };
 
 obj start_quest(int rows, int cols) {
@@ -389,7 +389,7 @@ obj start_quest(int rows, int cols) {
   const char *mesg = "questt blablalalla ( press something to contunue)";
   for (int i = 0; i < rows; i++) {
       for (int j = 0; j < cols; j++) {
-        mvaddch(i, j, ' ');
+        mvaddch(j, i, ' ');
       }
   }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
@@ -412,9 +412,9 @@ void calc_coridors(room old, room neww) {
     map[old_center_x][y] = ' ';
 
     if (map_vision[old_center_x][y] == 1) {
-    mvaddch(old_center_x, y, ' ');
+    mvaddch(y, old_center_x, ' ');
     } else {
-      mvaddch(old_center_x, y, '.');
+      mvaddch(y, old_center_x, '.');
     }
 
     if (old_center_y < neww_center_y) {
@@ -428,9 +428,9 @@ void calc_coridors(room old, room neww) {
     map[x][y] = ' ';
 
     if (map_vision[x][y] == 1) {
-      mvaddch(x, y, ' ');
+      mvaddch(y, x, ' ');
     } else {
-      mvaddch(x, y, '.');
+      mvaddch(y, x, '.');
     }
     
     
@@ -461,7 +461,7 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     draw_restart(restart);
     pl.draw_stats(rows, cols);
     test_mob.draw_mob(pl); // Рисуем моба
-    mvaddch(pl.x, pl.y, '@'); // Необходимо для корректной покраски мобов
+    // mvaddch(pl.y, pl.x, '@'); // Необходимо для корректной покраски мобов
 };
 
 
@@ -489,7 +489,7 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
-  int rows = 74, cols = 74; //  границы экрана
+  int rows = 238, cols = 74; //  границы экрана
   player pl(100, 5, 100, 100); // игрок
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
@@ -521,7 +521,7 @@ int main() {
  
     pl.movement(action);
     test_mob.behavior_bot(&pl, action); // поведение бота
-    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+    // draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
 
 
     if(pl.x == quest.x && pl.y == quest.y) { 
