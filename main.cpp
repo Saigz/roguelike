@@ -7,9 +7,9 @@
 
 using namespace std;
 
-// основнная тест комната
-char map[238][74];
-int map_vision[238][74];
+// карты
+char map[238][74]; // карта обьектов
+int map_vision[238][74]; // карта вижена
 
 
 // Классы
@@ -21,6 +21,7 @@ class coord {
   int y;
 };
 
+// класс живых созданий ( игрока, мобов)
 class creature : public coord {
   public :
   int cur_hp;   // current health
@@ -33,11 +34,11 @@ class creature : public coord {
 
 };
 
-
+// класс комнаты
 class room : public coord {
   public :
-  int size_x;
-  int size_y;
+  int size_x; // ширина комнаты
+  int size_y; // длина комнаты
 
   room() {
     size_x = 0;
@@ -50,6 +51,7 @@ class room : public coord {
 };
 
 
+// класс игрока
 class player : public creature {
   public :
 	int floor_counter; // счетчик этажа ( 5 - этажей победа)
@@ -207,11 +209,14 @@ void mob::draw_mob(player pl) {
   }
 };
 
+// передвежение игрока
 void player::movement(int action) {
     switch (action) {
       case KEY_UP :
-        if (map[x][y - 1] == ' ') { // проверка чтобы не выйти на стену
+      // проверка чтобы не выйти на стену
+        if (map[x][y - 1] == ' ') { 
           y--;
+          // вижн
           for (int i = x - 2; i < x + 2; i++) {
             for (int j = y - 3; j < y + 2; j++) {
               map_vision[i][j] = 1;
@@ -259,11 +264,13 @@ void player::movement(int action) {
     mvaddch(y, x, '@'); // печать игрока по определенным координатам
 };
 
+// состояние игрока и мира
 void player::draw_stats(int rows, int cols) {
   mvwprintw(stdscr, cols - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
   mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
 
+// обнуляем вижн
 void init_map_vision(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
@@ -272,24 +279,14 @@ void init_map_vision(int rows, int cols) {
   }
 };
 
+// спавн игрока
 void player::spawn_player(room start) {
   x = start.x + 3;
   y = start.y + 3;
 
 // spawn vision
-  int k = 0, m = 0;
-  if (x > 3) {
-    k = x - 2;
-  } else {
-    k = 0;
-  }
-  if  (y > 3) {
-    m = y - 2;
-  } else {
-    m = 0;
-  }
-  for (int i = k; i < k + 5; i++) {
-    for (int j = m; j < m + 5; j++) {
+  for (int i = x - 3; i < x + 5; i++) {
+    for (int j = y - 3; j < y + 5; j++) {
       map_vision[i][j] = 1;
     }
   }
@@ -300,7 +297,7 @@ void player::spawn_player(room start) {
 void fill_map(int rows, int cols) {
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      map[i][j] = '#';
+      map[i][j] = '#'; // # - стена
     }
   }
 };
@@ -329,6 +326,7 @@ void room::create_room(int rows, int cols) {
   }
 };
 
+// рандоминг расположения комнаты на карте  + добавление ее в массив карту обьектов
 void room::calc_room_coord(int rows, int cols) {
   int collision = 1;
 
@@ -371,19 +369,23 @@ void room::draw_room(int rows, int cols) {
   }
 };
 
+// рандоминг координаты обьекта в выбранной комнате(квесты, переход на след этаж и тп)
 void obj::calc_obj_coord(room start) {
   x = (rand() % start.size_x) + start.x;
   y = (rand() % start.size_y) + start.y;
 };
 
+// вывод значка квеста в консоль
 void draw_quest(coord quest) {
   mvaddch(quest.y, quest.x, '!');
 };
 
+// вывод значка перехода на след этаж в консоль
 void draw_restart(coord restart) {
   mvaddch(restart.y, restart.x, '0');
 };
 
+// старт текстового квеста
 obj start_quest(int rows, int cols) {
   obj quest;
   const char *mesg = "questt blablalalla ( press something to contunue)";
@@ -393,15 +395,17 @@ obj start_quest(int rows, int cols) {
       }
   }
   mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
-  getch();
-  quest.x = 0;
+  // getch();
+  quest.x = 0; // убирать квест с карты
   quest.y = 0;
   return quest;
 };
 
+// рассчитывание коридоров между комнатами
 void calc_coridors(room old, room neww) {
   int neww_center_x, neww_center_y, old_center_x, old_center_y;
-  neww_center_x = neww.x + (neww.size_x / 2);
+  //  центры комнат по х и у
+  neww_center_x = neww.x + (neww.size_x / 2); 
   neww_center_y = neww.y + (neww.size_y / 2);
   old_center_x = old.x + (old.size_x / 2);
   old_center_y = old.y + (old.size_y / 2);
@@ -446,10 +450,10 @@ void calc_coridors(room old, room neww) {
 
 void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, player pl, mob test_mob) {
    //отрисовываем карту
-    draw_walls(rows, cols);
-    start.draw_room(rows, cols);
-    calc_coridors(start, lvl1);
-    lvl1.draw_room(rows, cols);
+    draw_walls(rows, cols); // стены
+    start.draw_room(rows, cols); // комната
+    calc_coridors(start, lvl1); // коридор
+    lvl1.draw_room(rows, cols); 
     calc_coridors(lvl1, lvl2);
     lvl2.draw_room(rows, cols);
     calc_coridors(lvl2, lvl3);
@@ -457,9 +461,9 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     calc_coridors(lvl3, lvl4);
     lvl4.draw_room(rows, cols);
     calc_coridors(lvl4, start);
-    draw_quest(quest); //   quest
-    draw_restart(restart);
-    pl.draw_stats(rows, cols);
+    draw_quest(quest); // quest
+    draw_restart(restart); // переход на след этаж
+    pl.draw_stats(rows, cols); // состояние игрока и мира
     test_mob.draw_mob(pl); // Рисуем моба
     // mvaddch(pl.y, pl.x, '@'); // Необходимо для корректной покраски мобов
 };
@@ -517,9 +521,10 @@ int main() {
 
   //передвижение по карте
   do {
+    // отрисовываем все обьекты
     draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
  
-    pl.movement(action);
+    pl.movement(action); // поведение игрока
     test_mob.behavior_bot(&pl, action); // поведение бота
     // draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
 
@@ -530,22 +535,17 @@ int main() {
     if(action == 32){ // если нажали клавишу атаки(пробел)
       test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
 
-      if(test_mob.cur_hp <= 0){ // если боту нанесли критический урон
+      if(test_mob.cur_hp <= 0){ // если бот умер
         test_mob.is_alive = false;
         test_mob.draw_mob(pl);
       }
     }
     if(pl.x == restart.x && pl.y == restart.y) {
       init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
-      pl.floor_counter++; // рандомим этаж
+      pl.floor_counter++; // рандомим этаж и увеличениее счетчика этажа
     }
    
   } while((action = getch()) != 27 && pl.is_alive && pl.floor_counter != 5); // 27 - escape - leave from cycle and while player is alive
-    
-
-
-
-
 
 
     endwin(); // end curses
