@@ -217,7 +217,7 @@ void player::movement(int action) {
         if (map[x][y - 1] == ' ') { 
           y--;
           // вижн
-          for (int i = x - 2; i < x + 2; i++) {
+          for (int i = x - 3; i < x + 3; i++) {
             for (int j = y - 3; j < y + 2; j++) {
               map_vision[i][j] = 1;
             }
@@ -228,8 +228,8 @@ void player::movement(int action) {
       case KEY_DOWN :
         if (map[x][y + 1] == ' ') {
           y++;
-          for (int i = x - 2; i < x + 2; i++) {
-            for (int j = y - 2; j < y + 3; j++) {
+          for (int i = x - 2; i < x + 3; i++) {
+            for (int j = y - 2; j < y + 4; j++) {
               map_vision[i][j] = 1;
             }
           }
@@ -239,8 +239,8 @@ void player::movement(int action) {
       case KEY_RIGHT :
         if (map[x + 1][y] == ' ') {
           x++;
-          for (int i = x - 2; i < x + 3; i++) {
-            for (int j = y - 2; j < y + 2; j++) {
+          for (int i = x; i < x + 4; i++) {
+            for (int j = y - 2; j < y + 3; j++) {
               map_vision[i][j] = 1;
             }
           }
@@ -249,8 +249,8 @@ void player::movement(int action) {
 
       case KEY_LEFT :
         if (map[x - 1][y] == ' ') {
-          for (int i = x - 3; i < x + 2; i++) {
-            for (int j = y - 2; j < y + 2; j++) {
+          for (int i = x - 4; i < x + 1; i++) {
+            for (int j = y - 2; j < y + 3; j++) {
               map_vision[i][j] = 1;
             }
           }
@@ -465,7 +465,7 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     draw_restart(restart); // переход на след этаж
     pl.draw_stats(rows, cols); // состояние игрока и мира
     test_mob.draw_mob(pl); // Рисуем моба
-    // mvaddch(pl.y, pl.x, '@'); // Необходимо для корректной покраски мобов
+    mvaddch(pl.y, pl.x, '@'); // Необходимо для корректной покраски мобов
 };
 
 
@@ -526,8 +526,8 @@ int main() {
  
     pl.movement(action); // поведение игрока
     test_mob.behavior_bot(&pl, action); // поведение бота
-    // draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
-
+    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+    
 
     if(pl.x == quest.x && pl.y == quest.y) { 
       quest = start_quest(rows, cols);
