@@ -62,7 +62,7 @@ class player : public creature {
       max_hp = health;
       armor = armour;
       dmg = damage;
-      cur_mana = 0;
+      cur_mana = mana;
       max_mana = mana;
       is_alive = true;
     };
@@ -131,7 +131,6 @@ void mob::behavior_bot(player* pl, int action)  {
   if(is_alive){ // Функция активна только при условии того, что бот живой 
     if((abs(pl->x - x) <= 1) && (abs(pl->y - y) <= 1)) { // Поведение бота, если рядом игрок 
       mvwprintw(stdscr, 0, 1, "               Monster noticed you !                      "); // Сообщение о том, что бот занет про игрока 
-
       if(!are_you_evil_now) { // Если сейчас не злой, то с определённым шансом будет злой 
         int rand_evil_number = (rand() % 101);
 
@@ -544,12 +543,12 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
-  int rows = 100, cols = 38; //  границы экрана
+  int rows = 238, cols = 74; //  границы экрана
   player pl(100, 5, 100, 100); // игрок
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
   obj restart; // переход нна след этаж
-  mob test_mob(10, 1, 1, 99, 20, 99); //тестовый моб
+  mob test_mob(10, 50, 1, 99, 99, 99); //тестовый моб
 
 
 
@@ -586,6 +585,14 @@ int main() {
 
     if(pl.x == quest.x && pl.y == quest.y) { 
       quest = start_quest(rows, cols);
+    }
+    if(action == 32){ // если нажали клавишу атаки(пробел)
+      test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
+
+      if(test_mob.cur_hp <= 0){ // если бот умер
+        test_mob.is_alive = false;
+        test_mob.draw_mob(pl);
+      }
     }
     if(pl.x == restart.x && pl.y == restart.y) {
       init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
