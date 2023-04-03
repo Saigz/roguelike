@@ -601,10 +601,57 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
 };
 
 
+void menu_start(int rows, int cols, player *pl, bool *is_playing_game) {
+  coord start_game , exit_game;
+  bool is_complete = false;
+  int action;
+  pl->x = rows / 2;
+  pl->y = cols / 2;
+  start_game.x = (rows / 2) - 20;
+  start_game.y = (cols / 2) + 2;
+  exit_game.x = (rows / 2) + 20;
+  exit_game.y = (cols / 2) + 2;
+
+  while (!is_complete && (action = getch()) != 27) {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        mvaddch(j, i, ' ');
+      }
+    }
+    mvwprintw(stdscr, start_game.y, start_game.x, "x");
+    mvwprintw(stdscr, start_game.y - 1, start_game.x - 5, "START GAME");
+    mvwprintw(stdscr, start_game.y - 2, start_game.x - 5, "GIGACHAD :");
+
+    mvwprintw(stdscr, exit_game.y, exit_game.x, "x");
+    mvwprintw(stdscr, exit_game.y - 1, exit_game.x - 5, "EXIT GAME");
+    mvwprintw(stdscr, exit_game.y - 2, exit_game.x - 5, "VIRGIN :");
+
+    pl->game_movement(action);
+
+    if(pl->x == start_game.x && pl->y == start_game.y) {
+      *is_playing_game = true;
+      is_complete = true;
+    }
+
+    if(pl->x == exit_game.x && pl->y == exit_game.y) {
+      *is_playing_game = false;
+      is_complete = true;
+    }
+  }
+  
+
+
+}
+
+void end_game(int rows, int cols, player pl) {
+
+}
+
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
   int rows = 238, cols = 74; //  границы экрана
+  bool is_playing_game = true;
   player pl(100, 5, 100); // игрок in dung
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
@@ -613,7 +660,6 @@ int main() {
 
 
 
-  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
   // test_mob.spawn_mob(start); 
   
 
@@ -630,37 +676,47 @@ int main() {
 
   system("clear");
 
+  menu_start(rows, cols, &pl, &is_playing_game);
+  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
 
-  //передвижение по карте
-  do {
-    // отрисовываем все обьекты
-    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
 
-    pl.map_movement(action); // поведение игрока
+  while(is_playing_game) {
 
-    test_mob.behavior_bot(&pl, action); // поведение бота
-    test_mob.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
 
-    draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
-    
+          //передвижение по карте
+          do {
+            // отрисовываем все обьекты
+            draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
 
-    if(pl.x == quest.x && pl.y == quest.y) { 
-      quest = start_quest(rows, cols, &pl);
-    }
-    if(action == 32) { // если нажали клавишу атаки(пробел)
-      test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
+            pl.map_movement(action); // поведение игрока
 
-      if(test_mob.cur_hp <= 0) { // если бот умер
-        test_mob.is_alive = false;
-        test_mob.draw_mob(pl);
-      }
-    }
-    if(pl.x == restart.x && pl.y == restart.y) {
-      init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
-      pl.floor_counter++; // рандомим этаж и увеличениее счетчика этажа
-    }
-   
-  } while((action = getch()) != 27 && pl.is_alive && pl.floor_counter != 5); // 27 - escape - leave from cycle and while player is alive
+            test_mob.behavior_bot(&pl, action); // поведение бота
+            test_mob.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+
+            draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+            
+
+            if(pl.x == quest.x && pl.y == quest.y) { 
+              quest = start_quest(rows, cols, &pl);
+            }
+            if(action == 32) { // если нажали клавишу атаки(пробел)
+              test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
+
+              if(test_mob.cur_hp <= 0) { // если бот умер
+                test_mob.is_alive = false;
+                test_mob.draw_mob(pl);
+              }
+            }
+            if(pl.x == restart.x && pl.y == restart.y) {
+              init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
+              pl.floor_counter++; // рандомим этаж и увеличениее счетчика этажа
+            }
+          
+          } while((action = getch()) != 27 && pl.is_alive && pl.floor_counter != 5); // 27 - escape - leave from cycle and while player is alive
+
+  }
+
+
 
 
     endwin(); // end curses
