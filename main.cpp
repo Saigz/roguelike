@@ -62,7 +62,7 @@ class player : public creature {
       max_hp = health;
       armor = armour;
       dmg = damage;
-      cur_mana = mana;
+      cur_mana = 0;
       max_mana = mana;
       is_alive = true;
     };
@@ -87,7 +87,7 @@ class mob : public creature {
   void spawn_mob (room start);
   void draw_mob(player pl);
   void behavior_bot(player* pl, int action);
-  void taking_damage_and_death(player pl, int action);
+  void taking_damage_and_death(player* pl, int action);
 
   mob(int u_cur_hp, int u_dmg, int u_attack_radius, int u_evil_rate, int u_damage_rate, int u_spawn_rate){
     cur_hp = u_cur_hp;
@@ -111,14 +111,18 @@ class obj : public coord {
 // Функции и методы 
 
 // Получение урона от игрока ботом
-void mob::taking_damage_and_death(player pl, int action) {
-  if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1) && action == 32) {
-    cur_hp = cur_hp - pl.dmg;
+void mob::taking_damage_and_death(player* pl, int action) {
+  if((abs(pl->x - x) <= 1) && (abs(pl->y - y) <= 1) && action == 32) {
+    cur_hp = cur_hp - pl->dmg;
   }
 
-  if(cur_hp <= 0) {
+  if(cur_hp <= 0 && is_alive) {
     is_alive = false;
-    draw_mob(pl);
+    draw_mob(*pl);
+
+    pl->cur_mana += 10; // Даём игроку 10 монет за убийство бота
+
+    mvwprintw(stdscr, 0, 1, "               The monster is killed, 10 coins fell out of it!");
   }
 }
 
@@ -126,6 +130,7 @@ void mob::taking_damage_and_death(player pl, int action) {
 void mob::behavior_bot(player* pl, int action)  {
   if(is_alive){ // Функция активна только при условии того, что бот живой 
     if((abs(pl->x - x) <= 1) && (abs(pl->y - y) <= 1)) { // Поведение бота, если рядом игрок 
+      mvwprintw(stdscr, 0, 1, "               Monster noticed you !                      "); // Сообщение о том, что бот занет про игрока 
 
       if(!are_you_evil_now) { // Если сейчас не злой, то с определённым шансом будет злой 
         int rand_evil_number = (rand() % 101);
@@ -138,6 +143,7 @@ void mob::behavior_bot(player* pl, int action)  {
         int rand_damage_number = (rand() % 100);
 
         if(damage_rate >= rand_damage_number) { // Если бот решил атаковать
+          mvwprintw(stdscr, 0, 1, "               Monster dal pizdi you !                   ");
           pl->cur_hp = pl->cur_hp - dmg;
           if(pl->cur_hp <= 0){
             pl->is_alive = false;
@@ -223,23 +229,26 @@ void mob::spawn_mob(room start) {
 
 // Нанесение бота на экран консоли
 void mob::draw_mob(player pl) {
-  if (is_alive && map_vision[x][y] == 1) {
-    if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1)) {
-      init_pair(1, COLOR_RED, COLOR_BLACK);
-      attron(COLOR_PAIR(1));
-      mvaddch(y, x, 'a');
-      attroff(COLOR_PAIR(1));
-      attrset(0);
-    }
-    else {
-      mvaddch(y, x, 'a');
-    }
-  } else if (map_vision[x][y] == 1) {
+  if((abs(pl.x - x) <= 5) && (abs(pl.y - y) <= 5)) { // Отрисовка только в поле зрения игрока, равному 5 клеткам
+    if (is_alive && map_vision[x][y] == 1) {
+      if((abs(pl.x - x) <= 1) && (abs(pl.y - y) <= 1)) {
+        init_pair(1, COLOR_RED, COLOR_BLACK);
+        attron(COLOR_PAIR(1));
+        mvaddch(y, x, 'a');
+        attroff(COLOR_PAIR(1));
+        attrset(0);
+      }
+      else {
+        mvaddch(y, x, 'a');
+      }
+    } 
+    else if (map_vision[x][y] == 1) {
       init_pair(1, COLOR_YELLOW, COLOR_BLACK);
       attron(COLOR_PAIR(1));
       mvaddch(y, x, '%');
       attroff(COLOR_PAIR(1));
       attrset(0);
+    } 
   }
 };
 
@@ -257,6 +266,7 @@ void player::movement(int action) {
             }
           }
         }
+        mvwprintw(stdscr, 0, 1, "               Nothing interesting is happening...                  ");
         break;
 
       case KEY_DOWN :
@@ -268,6 +278,7 @@ void player::movement(int action) {
             }
           }
         }
+        mvwprintw(stdscr, 0, 1, "               Nothing interesting is happening...                  ");
         break;
         
       case KEY_RIGHT :
@@ -279,6 +290,7 @@ void player::movement(int action) {
             }
           }
         }
+        mvwprintw(stdscr, 0, 1, "               Nothing interesting is happening...                  ");
         break;
 
       case KEY_LEFT :
@@ -290,6 +302,7 @@ void player::movement(int action) {
           }
           x--;
         }
+        mvwprintw(stdscr, 0, 1, "               Nothing interesting is happening...                  ");
         break;  
 
       default:
@@ -300,7 +313,7 @@ void player::movement(int action) {
 
 // состояние игрока и мира
 void player::draw_stats(int rows, int cols) {
-  mvwprintw(stdscr, cols - 1, 1, "HP : %d(%d)    Mana : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
+  mvwprintw(stdscr, cols - 1, 1, "HP : %d(%d)    Coins : %d(%d)   Armor : %d   Damage : %d", cur_hp, max_hp, cur_mana, max_mana, armor, dmg);
   mvwprintw(stdscr, 0, 1, "Floor : %d", floor_counter);
 }
 
@@ -531,12 +544,12 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
 int main() {
   srand(time(NULL));
   int action; // переменная для хранения нажатой клавиши
-  int rows = 70, cols = 50; //  границы экрана
+  int rows = 100, cols = 38; //  границы экрана
   player pl(100, 5, 100, 100); // игрок
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
   obj restart; // переход нна след этаж
-  mob test_mob(10, 1, 1, 99, 99, 99); //тестовый моб
+  mob test_mob(10, 1, 1, 99, 20, 99); //тестовый моб
 
 
 
@@ -562,11 +575,11 @@ int main() {
   do {
     // отрисовываем все обьекты
     draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
- 
+
     pl.movement(action); // поведение игрока
 
     test_mob.behavior_bot(&pl, action); // поведение бота
-    test_mob.taking_damage_and_death(pl, action); // Получение урона ботом от игрока
+    test_mob.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
 
     draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
     
