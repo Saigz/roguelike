@@ -17,3 +17,4 @@ Made by : <br>
 <br> [Saigz](https://github.com/Saigz)
 <br> [z1gazaga](https://github.com/z1gazaga)
 <br> [mkiade](https://github.com/mkiade)
+<br> [1ucKyMaN](https://github.com/1ucKyMaN)
