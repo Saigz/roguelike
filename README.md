@@ -11,6 +11,9 @@ Features of the classic roguelike are randomly generated levels, turn-based and 
 
 This game is written on **c++** using the library **ncurses.lib**
 
+
+-----------------------------------
+
 Made by : <br> 
 <br> [Saigz](https://github.com/Saigz)
 <br> [z1gazaga](https://github.com/z1gazaga)
