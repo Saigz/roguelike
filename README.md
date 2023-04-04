@@ -1,6 +1,14 @@
-# roguelike
+# h1 roguelike game
+=====================
 
-made by ...
 
+h2 About roguelike :
+-----------------------------------
 
-this ouur first game on c++ with ncurseslib...
+Features of the classic roguelike are randomly generated levels, turn-based and irreversible death of the character - in case of his death, the player cannot load the game and must start it again
+
+-----------------------------------
+
+This game is written on **c++** using the library **ncurses.lib**
+
+Made by
