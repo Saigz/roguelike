@@ -3,7 +3,6 @@
 
 
 <h2> About <b>roguelike</b> :</h2>
------------------------------------
 
 Features of the classic roguelike are randomly generated levels, turn-based and irreversible death of the character - in case of his death, the player cannot load the game and must start it again
 
