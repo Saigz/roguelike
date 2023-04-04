@@ -623,7 +623,7 @@ void calc_coridors(room old, room neww) {
   
 }
 
-void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, coord magazine, player pl, mob test_mob) {
+void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, coord magazine, player pl, mob mob_1, mob mob_2, mob mob_3, mob mob_4, mob mob_5) {
    //отрисовываем карту
     draw_walls(rows, cols); // стены
     start.draw_room(rows, cols); // комната
@@ -640,12 +640,16 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     draw_magazine(magazine);
     draw_restart(restart); // переход на след этаж
     pl.draw_stats(rows, cols); // состояние игрока и мира
-    test_mob.draw_mob(pl); // Рисуем моба
+    mob_1.draw_mob(pl); // Рисуем моба
+    mob_2.draw_mob(pl);
+    mob_3.draw_mob(pl);
+    mob_4.draw_mob(pl);
+    mob_5.draw_mob(pl);
     mvaddch(pl.y, pl.x, '@'); // Необходимо для корректной покраски мобов
 };
 
 
-void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, obj *magazine, mob *test_mob, player *pl) {
+void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, obj *magazine, mob *mob_1, mob *mob_2, mob *mob_3, mob *mob_4, mob *mob_5, player *pl) {
   // добавляем стены в массив
   fill_map(rows, cols);
   init_map_vision(rows, cols);
@@ -657,10 +661,14 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
   lvl3->calc_room_coord(rows, cols);
   lvl4->calc_room_coord(rows, cols);
 
-  magazine->calc_obj_coord(*start);
+  magazine->calc_obj_coord(*lvl2);
   quest->calc_obj_coord(*lvl1); // рандомим координаты квеста
   restart->calc_obj_coord(*lvl4); // рандомим координаты перехода на след этаж
-  test_mob->spawn_mob(*start);  // рандомим координаты моба 
+  mob_1->spawn_mob(*start);  // рандомим координаты моба 
+  mob_2->spawn_mob(*lvl1);
+  mob_3->spawn_mob(*lvl2);
+  mob_4->spawn_mob(*lvl3);
+  mob_5->spawn_mob(*lvl4);
   pl->spawn_player(*start);
 
 
@@ -749,11 +757,16 @@ int main() {
   obj quest; // quest
   obj restart; // переход нна след этаж
   obj magazine; // magazine
-  mob test_mob(10, 20, 1, 99, 99, 99); //тестовый моб
+  mob mob_1(10, 1, 1, 99, 99, 99); //тестовый моб
+  mob mob_2(10, 1, 1, 99, 99, 99); //тестовый моб
+  mob mob_3(10, 1, 1, 99, 99, 99); //тестовый моб
+  mob mob_4(10, 1, 1, 99, 99, 99); //тестовый моб
+  mob mob_5(10, 1, 1, 99, 99, 99); //тестовый моб
 
 
 
-  // test_mob.spawn_mob(start); 
+
+  // mob_1.spawn_mob(start); 
   
 
   // curses settings
@@ -771,7 +784,7 @@ int main() {
   system("clear");
 
   menu_start(rows, cols, &pl, &is_playing_game);
-  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl); // рандомим этаж
+  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &mob_1, &mob_2, &mob_3, &mob_4, &mob_5, &pl); // рандомим этаж
 
 
   while(is_playing_game) {
@@ -779,14 +792,26 @@ int main() {
           //передвижение по карте
     do {
       // отрисовываем все обьекты
-      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, test_mob);
+      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, mob_1, mob_2, mob_3, mob_4, mob_5);
 
       pl.map_movement(action); // поведение игрока
 
-      test_mob.behavior_bot(&pl, action); // поведение бота
-      test_mob.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+      mob_1.behavior_bot(&pl, action); // поведение бота
+      mob_1.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
 
-      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, test_mob);
+      mob_2.behavior_bot(&pl, action); // поведение бота
+      mob_2.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+
+      mob_3.behavior_bot(&pl, action); // поведение бота
+      mob_3.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+
+      mob_4.behavior_bot(&pl, action); // поведение бота
+      mob_4.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+
+      mob_5.behavior_bot(&pl, action); // поведение бота
+      mob_5.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
+
+      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, mob_1, mob_2, mob_3, mob_4, mob_5);
       
 
       if(pl.x == quest.x && pl.y == quest.y) { 
@@ -795,16 +820,9 @@ int main() {
       if(pl.x == magazine.x && pl.y == magazine.y) { 
         enter_magazine(rows, cols, &pl);
       }
-      if(action == 32) { // если нажали клавишу атаки(пробел)
-        test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
-
-        if(test_mob.cur_hp <= 0) { // если бот умер
-          test_mob.is_alive = false;
-          test_mob.draw_mob(pl);
-        }
-      }
+    
       if(pl.x == restart.x && pl.y == restart.y) {
-        init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl);
+        init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &mob_1, &mob_2, &mob_3, &mob_4, &mob_5, &pl); // рандомим этаж
         pl.floor_counter++; // рандомим этаж и увеличениее счетчика этажа
       }
     
@@ -812,7 +830,7 @@ int main() {
 
     end_game(rows, cols, &pl);
     menu_start(rows, cols, &pl, &is_playing_game);
-    init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl); // рандомим этаж
+    init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &mob_1, &mob_2, &mob_3, &mob_4, &mob_5, &pl); // рандомим этаж
 
   }
 
