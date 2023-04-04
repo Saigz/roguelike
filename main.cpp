@@ -445,7 +445,7 @@ void room::draw_room(int rows, int cols) {
 
 // рандоминг координаты обьекта в выбранной комнате(квесты, переход на след этаж и тп)
 void obj::calc_obj_coord(room start) {
-  x = (rand() % start.size_x) + start.x;
+  x = (rand() % start.size_x) + start.x - 1;
   y = (rand() % start.size_y) + start.y;
 };
 
@@ -453,6 +453,12 @@ void obj::calc_obj_coord(room start) {
 void draw_quest(coord quest) {
   if (map_vision[quest.x][quest.y] == 1) {
     mvaddch(quest.y, quest.x, '!');
+  }
+};
+
+void draw_magazine(coord magazine) {
+  if (map_vision[magazine.x][magazine.y] == 1) {
+    mvaddch(magazine.y, magazine.x, '$');
   }
 };
 
@@ -481,8 +487,6 @@ obj start_quest(int rows, int cols, player *pl) {
   cancel.x = (rows / 2) + 20;
   cancel.y = cols / 2 + 2;
 
-
-  // mvwprintw(stdscr, rows / 2, (cols - strlen(mesg)) / 2, "%s", mesg);
   while (!is_complete && (action = getch()) != 27) {
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < cols; j++) {
@@ -512,6 +516,65 @@ obj start_quest(int rows, int cols, player *pl) {
   quest.y = 0;
   return quest;
 };
+
+void enter_magazine(int rows, int cols, player *pl) {
+  coord dmg_up;
+  coord restore_hp;
+  coord exit_magazine;
+  int action;
+  bool is_complete = false;
+  const char *mesg = "It`s KALINA MOLL";
+  coord checkpoint_pl;
+  checkpoint_pl.x = pl->x;
+  checkpoint_pl.y = pl->y;
+  pl->x = rows / 2;
+  pl->y = cols / 2;
+  dmg_up.x = (rows / 2) - 20;
+  dmg_up.y = cols / 2 + 2;
+  exit_magazine.x = (rows / 2);
+  exit_magazine.y = cols / 2 + 18;
+  restore_hp.x = (rows / 2) + 20;
+  restore_hp.y = cols / 2 + 2;
+
+  while (!is_complete && (action = getch()) != 27) {
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        mvaddch(j, i, ' ');
+      }
+    }
+    pl->draw_stats(rows, cols);
+    mvwprintw(stdscr, cols / 4, (rows - strlen(mesg)) / 2, "%s", mesg);
+
+    mvwprintw(stdscr, dmg_up.y - 2, dmg_up.x - 2, "10 gold");
+    mvwprintw(stdscr, dmg_up.y - 1, dmg_up.x - 3, "DAMAGE UP");
+    mvwprintw(stdscr, dmg_up.y, dmg_up.x, "x");
+
+    mvwprintw(stdscr, restore_hp.y - 2, restore_hp.x - 2, "10 gold");
+    mvwprintw(stdscr, restore_hp.y - 1, restore_hp.x - 3, "RESTORE HP");
+    mvwprintw(stdscr, restore_hp.y, restore_hp.x, "x");
+
+    mvwprintw(stdscr, exit_magazine.y - 1, exit_magazine.x - 2, "EXIT");
+    mvwprintw(stdscr, exit_magazine.y, exit_magazine.x, "x");
+
+    pl->game_movement(action);
+
+    if (pl->x == dmg_up.x && pl->y == dmg_up.y && pl->cur_gold >= 10) {
+      pl->dmg = pl->dmg + 5;
+      pl->cur_gold = pl->cur_gold - 10;
+    }
+    if (pl->x == restore_hp.x && pl->y == restore_hp.y && pl->cur_gold >= 10) {
+      pl->cur_hp = pl->max_hp;
+      pl->cur_gold = pl->cur_gold - 10;
+    }
+    if(pl->x == exit_magazine.x && pl->y == exit_magazine.y) {
+      is_complete = true;
+    }
+  }
+
+
+  pl->x = checkpoint_pl.x + 1;
+  pl->y = checkpoint_pl.y;
+}
 
 // рассчитывание коридоров между комнатами
 void calc_coridors(room old, room neww) {
@@ -560,7 +623,7 @@ void calc_coridors(room old, room neww) {
   
 }
 
-void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, player pl, mob test_mob) {
+void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, room lvl4, coord quest, coord restart, coord magazine, player pl, mob test_mob) {
    //отрисовываем карту
     draw_walls(rows, cols); // стены
     start.draw_room(rows, cols); // комната
@@ -574,6 +637,7 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
     lvl4.draw_room(rows, cols);
     // calc_coridors(lvl4, start);
     draw_quest(quest); // quest
+    draw_magazine(magazine);
     draw_restart(restart); // переход на след этаж
     pl.draw_stats(rows, cols); // состояние игрока и мира
     test_mob.draw_mob(pl); // Рисуем моба
@@ -581,7 +645,7 @@ void draw_all(int rows, int cols, room start, room lvl1, room lvl2, room lvl3, r
 };
 
 
-void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, mob *test_mob, player *pl) {
+void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *lvl3, room *lvl4, obj *quest, obj *restart, obj *magazine, mob *test_mob, player *pl) {
   // добавляем стены в массив
   fill_map(rows, cols);
   init_map_vision(rows, cols);
@@ -593,6 +657,7 @@ void init_floor(int rows, int cols, room *start, room *lvl1, room *lvl2, room *l
   lvl3->calc_room_coord(rows, cols);
   lvl4->calc_room_coord(rows, cols);
 
+  magazine->calc_obj_coord(*start);
   quest->calc_obj_coord(*lvl1); // рандомим координаты квеста
   restart->calc_obj_coord(*lvl4); // рандомим координаты перехода на след этаж
   test_mob->spawn_mob(*start);  // рандомим координаты моба 
@@ -683,7 +748,8 @@ int main() {
   room start, lvl1, lvl2, lvl3, lvl4; // комнаты
   obj quest; // quest
   obj restart; // переход нна след этаж
-  mob test_mob(10, 100, 1, 99, 99, 99); //тестовый моб
+  obj magazine; // magazine
+  mob test_mob(10, 20, 1, 99, 99, 99); //тестовый моб
 
 
 
@@ -705,7 +771,7 @@ int main() {
   system("clear");
 
   menu_start(rows, cols, &pl, &is_playing_game);
-  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
+  init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl); // рандомим этаж
 
 
   while(is_playing_game) {
@@ -713,18 +779,21 @@ int main() {
           //передвижение по карте
     do {
       // отрисовываем все обьекты
-      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, test_mob);
 
       pl.map_movement(action); // поведение игрока
 
       test_mob.behavior_bot(&pl, action); // поведение бота
       test_mob.taking_damage_and_death(&pl, action); // Получение урона ботом от игрока
 
-      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, pl, test_mob);
+      draw_all(rows, cols, start, lvl1, lvl2, lvl3, lvl4, quest, restart, magazine, pl, test_mob);
       
 
       if(pl.x == quest.x && pl.y == quest.y) { 
         quest = start_quest(rows, cols, &pl);
+      }
+      if(pl.x == magazine.x && pl.y == magazine.y) { 
+        enter_magazine(rows, cols, &pl);
       }
       if(action == 32) { // если нажали клавишу атаки(пробел)
         test_mob.cur_hp = test_mob.cur_hp - pl.dmg;
@@ -735,7 +804,7 @@ int main() {
         }
       }
       if(pl.x == restart.x && pl.y == restart.y) {
-        init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl);
+        init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl);
         pl.floor_counter++; // рандомим этаж и увеличениее счетчика этажа
       }
     
@@ -743,7 +812,7 @@ int main() {
 
     end_game(rows, cols, &pl);
     menu_start(rows, cols, &pl, &is_playing_game);
-    init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &test_mob, &pl); // рандомим этаж
+    init_floor(rows, cols, &start, &lvl1, &lvl2, &lvl3, &lvl4, &quest, &restart, &magazine, &test_mob, &pl); // рандомим этаж
 
   }
 
